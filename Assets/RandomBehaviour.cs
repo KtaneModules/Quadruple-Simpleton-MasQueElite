@@ -2,33 +2,34 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RandomBehaviour : ButtonBehaviour
+public class RandomBehaviour : IButtonBehaviour
 {
+    public int id { get; private set; }
+    private readonly int _n = 2;
+    private int _presses = 0;
 
-    private readonly int n;
+    public RandomBehaviour (int sideLength) { _n = sideLength; id = 2; }
 
-    public RandomBehaviour (int sideLength) { n = sideLength; }
+    public Vector3 CalculateSize (float x, float y, float z) { return new Vector3(x / _n, y, z / _n); }
 
-    public override Vector3 CalculateSize (float x, float y, float z) { return new Vector3(x / n, y, z / n); }
-
-    public override Vector3 CalculatePositions (int cloneNumber, float y)
+    public Vector3 CalculatePositions (int cloneNumber, float y)
     { //module boundaries: [0.1, -0.1]
 
-        if (n < 0) return new Vector3(-1f, -2f, -1f);
+        if (_n < 0) return new Vector3(-1f, -2f, -1f);
 
-        float margin = 0.2f / n + 0.02f + n / 1000f;
+        float margin = 0.2f / _n + 0.02f + _n / 1000f;
         float distance = 0.2f - margin;                                                     //slight off-center correction
-        float widthDistribution = cloneNumber % n * distance / (n - 1) - 0.1f + margin / 2 + 0.0055f * 1 / n;
-        float heightDistribution = cloneNumber / n * distance / (n - 1) - 0.1f + margin / 2;
+        float widthDistribution = cloneNumber % _n * distance / (_n - 1) - 0.1f + margin / 2 + 0.0055f * 1 / _n;
+        float heightDistribution = cloneNumber / _n * distance / (_n - 1) - 0.1f + margin / 2;
 
         return new Vector3(widthDistribution, y, heightDistribution);
     }
 
-    public override string AgainMessage (int cloneNumber) { return "You changed absolutely nothing."; }
-    public override string ButtonMessage (int presses) { return "You pressed " + presses + " button" + (presses != 1 ? "s." : "."); }
+    public string AgainMessage (int cloneNumber) { return string.Format("You pressed button {0} and you changed absolutely nothing. Hooray!", cloneNumber); }
+    public string ButtonMessage (int presses) { return "You pressed " + presses + " button" + (presses != 1 ? "s." : "."); }
 
-    public override int Check4solve (int presses) {
-
-        return presses >= (n * n) ? 2 : 0;
+    public bool CheckSolve () {
+        _presses++;
+        return _presses >= (_n * _n);
     }
 }

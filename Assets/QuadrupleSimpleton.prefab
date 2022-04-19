@@ -105,7 +105,6 @@ GameObject:
   - component: {fileID: 33148183869664472}
   - component: {fileID: 23353903133282700}
   - component: {fileID: 114071057635325834}
-  - component: {fileID: 114150357484976634}
   - component: {fileID: 114423969434966370}
   m_Layer: 0
   m_Name: ButtonHL
@@ -161,8 +160,8 @@ GameObject:
   - component: {fileID: 114817933349874938}
   - component: {fileID: 114572365571879002}
   - component: {fileID: 114731892562298510}
-  - component: {fileID: 114310715060334708}
-  - component: {fileID: 114767121276356480}
+  - component: {fileID: 114100147748982976}
+  - component: {fileID: 114969015085366654}
   m_Layer: 0
   m_Name: QuadrupleSimpleton
   m_TagString: Untagged
@@ -506,29 +505,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   HighlightScale: {x: 1, y: 1, z: 1}
   OutlineAmount: 0
---- !u!114 &114150357484976634
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1421257204889900}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 1702003387, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Parent: {fileID: 114731892562298510}
-  Children: []
-  IsPassThrough: 0
-  ChildRowLength: 0
-  Highlight: {fileID: 114071057635325834}
-  SelectableColliders: []
-  DefaultSelectableIndex: 0
-  AllowSelectionWrapX: 0
-  AllowSelectionWrapY: 0
-  ForceSelectionHighlight: 0
-  ForceInteractionHighlight: 0
---- !u!114 &114310715060334708
+--- !u!114 &114100147748982976
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -536,10 +513,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1991359787617870}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: adf69c2de51bd3c43bbd9bc22578ee08, type: 3}
+  m_Script: {fileID: 11500000, guid: f5152bfaf1cd3104882f26e4c4b1d8ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _seed: 1
+  M: {fileID: 114572365571879002}
+  Audio: {fileID: 114744778481760372}
+  RefButton: {fileID: 114332927391505060}
+  Module: {fileID: 114731892562298510}
+  StatusLight: {fileID: 1373021821613070}
+  RuleSeed: {fileID: 114969015085366654}
 --- !u!114 &114332927391505060
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -672,24 +654,6 @@ MonoBehaviour:
   m_Script: {fileID: -1675560866, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &114767121276356480
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1991359787617870}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5152bfaf1cd3104882f26e4c4b1d8ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Bomb: {fileID: 114817933349874938}
-  Module: {fileID: 114572365571879002}
-  Audio: {fileID: 114744778481760372}
-  Button: {fileID: 114332927391505060}
-  ModuleSelectable: {fileID: 114731892562298510}
-  StatusLight: {fileID: 1373021821613070}
-  ruleSeedable: {fileID: 114310715060334708}
 --- !u!114 &114817933349874938
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -701,3 +665,15 @@ MonoBehaviour:
   m_Script: {fileID: 2144496390, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &114969015085366654
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1991359787617870}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adf69c2de51bd3c43bbd9bc22578ee08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _seed: 7

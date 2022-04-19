@@ -6,7 +6,7 @@ using UnityEngine;
 using KModkit;
 using random = UnityEngine.Random;
 
-public class QuadrupleSimpleton4An : MonoBehaviour { my big steps uwu
+public class QuadrupleSimpleton4Any : MonoBehaviour { my big steps uwu
 
     public KMBombInfo Bomb;
     public KMBombModule Module;

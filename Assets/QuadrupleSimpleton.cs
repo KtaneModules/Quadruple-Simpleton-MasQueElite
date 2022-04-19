@@ -1,63 +1,163 @@
-﻿/*using UnityEngine;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using KModkit;
 using random = UnityEngine.Random;
 
-public class QuadrupleSimpleton : MonoBehaviour { my first steps into this project
-
-    public KMBombInfo Bomb;
-    public KMBombModule Module;
+//before Awake: abstracted utils (usually short); after awake: functionality methods (usually long)
+//note: all the fields/methods I'm not commenting should be auto-documentable
+public class QuadrupleSimpleton : MonoBehaviour
+{
+    public KMBombModule M;
     public KMAudio Audio;
-    public KMSelectable[] Buttons;
+    public KMSelectable RefButton;
+    public KMSelectable Module;
+    public GameObject StatusLight;
+        public KMRuleSeedable RuleSeed;
+        private int seed;
 
-    private enum Positions { TL, TR, BL, BR };
+    private bool solved;
+    private List<KMSelectable> buttons = new List<KMSelectable>();
+    private IButtonBehaviour behaviour;
 
-    private bool[] pressed = new bool[4]; //defaults to false
-    /* I preferred this solution since using...
-         Buttons[j].transform.parent.GetComponentInChildren<TextMesh>().text
-       ...to check every time if a button has been pressed or not costs more power than acceding to "pressed".
-       Nonetheless, making this array costs more space than they array-less solution, naturally.
-       While modding, from [power vs space] I will always decide to sacrifice space instead of space.*//*
-
-    static int moduleIdCounter = 1;
     int moduleId;
-    private bool moduleSolved;
 
-    void Awake () { //0th frame
-
-        moduleId = moduleIdCounter++;
-        Debug.Log("T means Top, B means Bottom, L means Left, R means Right.");
-
-        for (int i = 0; i < 4; i++)
+    /* It does three things: (based off "seed")
+     * - Instanciates a behaviour and then returns it
+     * - Assigns "side" a value
+     * - Modifies the status light. (to be visible or not)
+     */
+    private IButtonBehaviour makeBehaviourDecision(out int side)
+    {
+        IButtonBehaviour behaviour;
+        if (seed == 1)
         {
-            int j = i; //bug lmao
-            Buttons[i].OnInteract += () => { ButtonHandler(j); return false; };
+            side = 2;
+            behaviour = new NormalBehaviour();
+        }
+        else
+        {
+            side = RuleSeed.GetRNG().Next(8) % 9 + 3; //Interval: [3, 11]
+            behaviour = new RandomBehaviour(side);
+            StatusLight.SetActive(false);
+        }
+        return behaviour;
+    }
+
+    private void HookButtons(List<KMSelectable> buttons)
+    {
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            int j = i; //bug lmao TODO: CHECK THIS
+            buttons[j].OnInteract += () => ButtonHandler(buttons[j], j);
         }
     }
 
-    private void ButtonHandler (int position)
+    //TODO: ADD THICC INTERACTION PUNCH
+    //TODO: REMOVE UNUSED LIBRARIES
+    void Awake ()
     {
-        Buttons[position].transform.parent.GetComponentInChildren<TextMesh>().text = "VICTORY!";
+        //every module has to have an ID number
+        moduleId++;
+        //how many buttons will the NxN square have?
+        int side;
+        //note: GetRNG just returns a MonoRandom which has the property I need ("Seed").
+        seed = RuleSeed.GetRNG().Seed;
+        
+        behaviour = makeBehaviourDecision(out side); //"outside" lol :^
 
-        if (pressed[position]) Debug.Log("You have just pressed the " + (Positions)position + " button again. You should be proud of yourself :3");
-        else				 { Debug.Log("You pressed the " + (Positions)position + " button. Congrats!"); PlayButtonAudio(position); }
+        for (int i = 0; i < side * side; i++)
+        {
+            Transform clone = Instantiate(RefButton.transform, RefButton.transform.parent);
+            clone.transform.localScale =
+                behaviour.CalculateSize(
+                    clone.transform.localScale.x,
+                    clone.transform.localScale.y,
+                    clone.transform.localScale.z);
+            clone.transform.localPosition =
+                behaviour.CalculatePositions (
+                    i, clone.transform.localPosition.y);
 
-        pressed[position] = true; //sets that button to the pressed state
-
-        if (Check4solve()) Module.HandlePass();
+            buttons.Add(clone.GetComponent<KMSelectable>());
+        }
+        Module.Children = buttons.ToArray();
+        Module.UpdateChildrenProperly();
+        Destroy(RefButton.gameObject);
+        HookButtons(buttons);
     }
 
-    private bool Check4solve() //plays audio xd
+    private void PlayButtonAudio() { Audio.PlaySoundAtTransform("Victory", Module.transform); }
+    private void DoEasterEgg()
     {
-        foreach (bool log in pressed) if (!log) return false;
+        Audio.PlaySoundAtTransform("Lo-hicimos", Module.transform);
+        buttons[0].GetComponentInChildren<TextMesh>().text = "¡Lo";
+        buttons[1].GetComponentInChildren<TextMesh>().text = "hicimos!";
+        buttons[2].GetComponentInChildren<TextMesh>().text = "We did";
+        buttons[3].GetComponentInChildren<TextMesh>().text = "it!";
+        Debug.LogFormat("[Quadruple Simpleton #{0}] You did it!! Congrats! :D", moduleId);
+    }
+    private bool ButtonHandler(KMSelectable button, int position)
+    {
+        //just an abstraction
+        bool pressed = button.GetComponentInChildren<TextMesh>().text != "PUSH IT!";
 
-        /*(else)*//* return true;
+        if (pressed)
+        {
+            Debug.LogFormat("[Quadruple Simpleton #{0}] {1}", moduleId,
+                             behaviour.AgainMessage(position));
+            //already been solved?
+            if (solved)
+                StartCoroutine(ButtonPush(button.transform));
+        }
+        else
+        {
+            PlayButtonAudio();
+            Debug.LogFormat("[Quadruple Simpleton #{0}] {1}", moduleId,
+                             behaviour.ButtonMessage(position));
+            button.GetComponentInChildren<TextMesh>().text = "VICTORY!";
+            solved = behaviour.CheckSolve(); //not solved? check
+            if (solved)
+            {
+                M.HandlePass();
+                if (seed == 1)
+                { if (random.Range(0, 50) == 0) DoEasterEgg(); }
+                else StartCoroutine(RandomSolved());
+            }
+        }
+
+        return false;
     }
 
-    private void PlayButtonAudio(int position) //checks for solved conditions 
+    private void ColorButtons(Color color)
     {
-        int magicNumber = random.Range(0, 100);
-        if (magicNumber == 0) Audio.PlaySoundAtTransform("Lo hicimos", Buttons[position].transform);
-        else if (magicNumber > 20) Audio.PlaySoundAtTransform("Victory", Buttons[position].transform);
-        else Audio.PlaySoundAtTransform("ML Victory Sound", Buttons[position].transform);
+        foreach (KMSelectable button in buttons)
+            button.GetComponentInChildren<TextMesh>().color = color;
+    }
+    IEnumerator RandomSolved()
+    {
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.CorrectChime, Module.transform);
+        for (int i = 0; i < 2; i++)
+        {
+            ColorButtons(Color.green);
+            yield return new WaitForSeconds(0.4f);
+            ColorButtons(Color.white);
+            yield return new WaitForSeconds(0.4f);
+        }
+
+        ColorButtons(new Color(0, 0.8f, 0));
+    }
+
+    IEnumerator ButtonPush(Transform pressedButtonTransform)
+    {
+        pressedButtonTransform.localPosition = new Vector3(pressedButtonTransform.localPosition.x,
+                                                           pressedButtonTransform.localPosition.y - 0.0015f,
+                                                           pressedButtonTransform.localPosition.z);
+        Audio.PlaySoundAtTransform("boing", pressedButtonTransform);
+        yield return new WaitForSeconds(0.2f);
+        pressedButtonTransform.localPosition = new Vector3(pressedButtonTransform.localPosition.x,
+                                                           pressedButtonTransform.localPosition.y + 0.0015f,
+                                                           pressedButtonTransform.localPosition.z);
     }
 }
-*/

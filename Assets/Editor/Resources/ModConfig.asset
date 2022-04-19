@@ -20,5 +20,6 @@ MonoBehaviour:
     Thanks to all the people who helped me throught modding, whether in this project
     or any other one, love ya :3'
   version: 1.0
-  outputFolder: C:/Program Files/Steam/steamapps/common/Keep Talking and Nobody Explodes/mods
+  outputFolder: C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody
+    Explodes\mods
   previewImage: {fileID: 2800000, guid: c4e53270bef5fbf41829a7426f09ed8f, type: 3}
