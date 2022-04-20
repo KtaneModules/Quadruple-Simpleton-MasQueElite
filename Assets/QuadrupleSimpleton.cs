@@ -16,34 +16,54 @@ public class QuadrupleSimpleton : MonoBehaviour
     public KMSelectable Module;
     public GameObject StatusLight;
         public KMRuleSeedable RuleSeed;
-        private int seed;
 
     private bool solved;
-    private List<KMSelectable> buttons = new List<KMSelectable>();
-    private IButtonBehaviour behaviour;
+    private ButtonBehaviour behaviour;
+    private List<KMSelectable> buttons;
 
     int moduleId;
 
-    /* It does three things: (based off "seed")
-     * - Instanciates a behaviour and then returns it
-     * - Assigns "side" a value
-     * - Modifies the status light. (to be visible or not)
-     */
-    private IButtonBehaviour makeBehaviourDecision(out int side)
+    void Awake()
     {
-        IButtonBehaviour behaviour;
+        Debug.LogFormat("[Quadruple Simpleton #{0}] T means Top, B means Bottom, L means Left, R means Right.", moduleId);
+        moduleId++;
+        int side;
+        int seed = RuleSeed.GetRNG().Seed;
+        behaviour = ButtonBehaviour.InstantiateProperly(gameObject, makeBehaviourDecision(out side, seed));
+        var go = new GameObject();
+        buttons = go.GetComponents<KMSelectable>().ToList();
+        Destroy(go); //freeing resources
+        MakeButtons(side);
+    }
+
+    void Start ()
+    {
+    }
+    //workaround for "Warning: You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
+    //TODO: REMOVE UNUSED LIBRARIES
+    //still the workaround
+    //"outside" lol :^
+    //TODO: CHECK MATF.LERP
+    //every module has to have an ID number
+    //note: GetRNG just returns a MonoRandom which has the property I need ("Seed").
+    //how many buttons will the NxN square have?
+
+    /* It does three things: (based off "seed")
+     * - Returns "side" with value
+     * - Modifies the status light (to be visible or not)
+     * - Sends an extra output message
+     */
+    private int makeBehaviourDecision(out int side, int seed)
+    {
         if (seed == 1)
-        {
             side = 2;
-            behaviour = new NormalBehaviour();
-        }
         else
         {
             side = RuleSeed.GetRNG().Next(8) % 9 + 3; //Interval: [3, 11]
-            behaviour = new RandomBehaviour(side);
+            Debug.LogFormat("[Quadruple Simpleton #{0}] Button order is from top to bottom, right to left.", moduleId);
             StatusLight.SetActive(false);
         }
-        return behaviour;
+        return side;
     }
 
     private void HookButtons(List<KMSelectable> buttons)
@@ -55,19 +75,8 @@ public class QuadrupleSimpleton : MonoBehaviour
         }
     }
 
-    //TODO: ADD THICC INTERACTION PUNCH
-    //TODO: REMOVE UNUSED LIBRARIES
-    void Awake ()
+    private void MakeButtons(int side)
     {
-        //every module has to have an ID number
-        moduleId++;
-        //how many buttons will the NxN square have?
-        int side;
-        //note: GetRNG just returns a MonoRandom which has the property I need ("Seed").
-        seed = RuleSeed.GetRNG().Seed;
-        
-        behaviour = makeBehaviourDecision(out side); //"outside" lol :^
-
         for (int i = 0; i < side * side; i++)
         {
             Transform clone = Instantiate(RefButton.transform, RefButton.transform.parent);
@@ -77,7 +86,7 @@ public class QuadrupleSimpleton : MonoBehaviour
                     clone.transform.localScale.y,
                     clone.transform.localScale.z);
             clone.transform.localPosition =
-                behaviour.CalculatePositions (
+                behaviour.CalculatePositions(
                     i, clone.transform.localPosition.y);
 
             buttons.Add(clone.GetComponent<KMSelectable>());
@@ -107,21 +116,24 @@ public class QuadrupleSimpleton : MonoBehaviour
         {
             Debug.LogFormat("[Quadruple Simpleton #{0}] {1}", moduleId,
                              behaviour.AgainMessage(position));
+            Audio.PlaySoundAtTransform("boing", button.transform);
             //already been solved?
-            if (solved)
-                StartCoroutine(ButtonPush(button.transform));
+            if (solved) button.AddInteractionPunch(100f);
+            else StartCoroutine(ButtonPush(button.transform));
         }
         else
         {
             PlayButtonAudio();
+            button.AddInteractionPunch();
             Debug.LogFormat("[Quadruple Simpleton #{0}] {1}", moduleId,
                              behaviour.ButtonMessage(position));
             button.GetComponentInChildren<TextMesh>().text = "VICTORY!";
-            solved = behaviour.CheckSolve(); //not solved? check
+            //not solved? check
+            solved = behaviour.CheckSolve();
             if (solved)
             {
                 M.HandlePass();
-                if (seed == 1)
+                if (1 == 1) //TODO: SEED == 1
                 { if (random.Range(0, 50) == 0) DoEasterEgg(); }
                 else StartCoroutine(RandomSolved());
             }
@@ -145,19 +157,19 @@ public class QuadrupleSimpleton : MonoBehaviour
             ColorButtons(Color.white);
             yield return new WaitForSeconds(0.4f);
         }
-
         ColorButtons(new Color(0, 0.8f, 0));
     }
 
-    IEnumerator ButtonPush(Transform pressedButtonTransform)
+    IEnumerator ButtonPush(Transform pressedButtonTransform) //if you jitter click you can sink the button
     {
-        pressedButtonTransform.localPosition = new Vector3(pressedButtonTransform.localPosition.x,
-                                                           pressedButtonTransform.localPosition.y - 0.0015f,
-                                                           pressedButtonTransform.localPosition.z);
-        Audio.PlaySoundAtTransform("boing", pressedButtonTransform);
+        pressedButtonTransform.localPosition =
+            new Vector3(pressedButtonTransform.localPosition.x,
+                        pressedButtonTransform.localPosition.y - 0.0015f,
+                        pressedButtonTransform.localPosition.z);
         yield return new WaitForSeconds(0.2f);
-        pressedButtonTransform.localPosition = new Vector3(pressedButtonTransform.localPosition.x,
-                                                           pressedButtonTransform.localPosition.y + 0.0015f,
-                                                           pressedButtonTransform.localPosition.z);
+        pressedButtonTransform.localPosition =
+            new Vector3(pressedButtonTransform.localPosition.x,
+                        pressedButtonTransform.localPosition.y + 0.0015f,
+                        pressedButtonTransform.localPosition.z);
     }
 }

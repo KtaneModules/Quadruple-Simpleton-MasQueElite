@@ -1,8 +1,8 @@
-﻿using System.Collections;
+﻿/*using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NormalBehaviour : IButtonBehaviour
+public class NormalBehaviour : IButtonBehaviour --- Non-rule-seed behaviour
 {
     public int id { get; private set; }
     private int _presses = 0;
@@ -43,4 +43,4 @@ public class NormalBehaviour : IButtonBehaviour
         _presses++;
         return _presses >= 4;
     }
-}
+}*/

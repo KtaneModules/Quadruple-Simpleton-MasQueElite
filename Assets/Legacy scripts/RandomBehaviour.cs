@@ -1,8 +1,8 @@
-﻿using System.Collections;
+﻿/*using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RandomBehaviour : IButtonBehaviour
+public class RandomBehaviour : IButtonBehaviour --- Non-rule-seed behaviour
 {
     public int id { get; private set; }
     private readonly int _n = 2;
@@ -32,4 +32,4 @@ public class RandomBehaviour : IButtonBehaviour
         _presses++;
         return _presses >= (_n * _n);
     }
-}
+}*/
