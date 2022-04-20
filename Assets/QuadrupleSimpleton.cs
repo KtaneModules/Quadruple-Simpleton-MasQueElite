@@ -6,7 +6,6 @@ using UnityEngine;
 using KModkit;
 using random = UnityEngine.Random;
 
-//before Awake: abstracted utils (usually short); after awake: functionality methods (usually long)
 //note: all the fields/methods I'm not commenting should be auto-documentable
 public class QuadrupleSimpleton : MonoBehaviour
 {
@@ -16,32 +15,35 @@ public class QuadrupleSimpleton : MonoBehaviour
     public KMSelectable Module;
     public GameObject StatusLight;
         public KMRuleSeedable RuleSeed;
+        private int seed;
 
     private bool solved;
+    private GameObject workaround;
     private ButtonBehaviour behaviour;
-    private List<KMSelectable> buttons;
+    private List<KMSelectable> buttons = new List<KMSelectable>();
 
     int moduleId;
-
-    public GameObject workaround;
-    GameObject w;
 
     void Awake()
     {
         Debug.LogFormat("[Quadruple Simpleton #{0}] T means Top, B means Bottom, L means Left, R means Right.", moduleId);
         moduleId++;
+        seed = RuleSeed.GetRNG().Seed;
         int side;
-        int seed = RuleSeed.GetRNG().Seed;
-        w = new GameObject();
-        w.AddComponent<ButtonBehaviour>();
-        //behaviour = ButtonBehaviour.InstantiateProperly(w, 2);
-        ButtonBehaviour.putPropierty(ref w, 2);
-        buttons = new List<KMSelectable>();
-        makeBehaviourDecision(out side, seed);
-        behaviour = w.GetComponent<ButtonBehaviour>();
+        makeBehaviourDecision(out side);
+        WorkaroundTheWarning(side);
         MakeButtons(side);
     }
-    //workaround for "Warning: You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
+    //workaround for the warning: "You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
+    private void WorkaroundTheWarning(int side)
+    {
+        workaround = new GameObject();
+        workaround.AddComponent<ButtonBehaviour>();
+        ButtonBehaviour.PutConstructorPropierty(ref workaround, side);
+        behaviour = workaround.GetComponent<ButtonBehaviour>();
+    }
+
+    
     //TODO: REMOVE UNUSED LIBRARIES
     //still the workaround
     //"outside" lol :^
@@ -55,7 +57,7 @@ public class QuadrupleSimpleton : MonoBehaviour
      * - Modifies the status light (to be visible or not)
      * - Sends an extra output message
      */
-    private void makeBehaviourDecision(out int side, int seed)
+    private void makeBehaviourDecision(out int side)
     {
         if (seed == 1)
             side = 2;
