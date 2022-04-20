@@ -160,7 +160,7 @@ GameObject:
   - component: {fileID: 114817933349874938}
   - component: {fileID: 114572365571879002}
   - component: {fileID: 114731892562298510}
-  - component: {fileID: 114547800206014154}
+  - component: {fileID: 114415310559784126}
   - component: {fileID: 114082081498235576}
   m_Layer: 0
   m_Name: QuadrupleSimpleton
@@ -552,6 +552,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - Standard
+--- !u!114 &114415310559784126
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1991359787617870}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e804a7b1f3589144c9ffe92b155b2fab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  M: {fileID: 114572365571879002}
+  Audio: {fileID: 114744778481760372}
+  RefButton: {fileID: 114332927391505060}
+  Module: {fileID: 114731892562298510}
+  StatusLight: {fileID: 1373021821613070}
+  RuleSeed: {fileID: 0}
+  workaround: {fileID: 0}
 --- !u!114 &114423969434966370
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -578,23 +596,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   HighlightScale: {x: 1, y: 1, z: 1}
   OutlineAmount: 0
---- !u!114 &114547800206014154
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1991359787617870}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5152bfaf1cd3104882f26e4c4b1d8ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  M: {fileID: 114572365571879002}
-  Audio: {fileID: 114744778481760372}
-  RefButton: {fileID: 114332927391505060}
-  Module: {fileID: 114731892562298510}
-  StatusLight: {fileID: 1373021821613070}
-  RuleSeed: {fileID: 114082081498235576}
 --- !u!114 &114572365571879002
 MonoBehaviour:
   m_ObjectHideFlags: 1

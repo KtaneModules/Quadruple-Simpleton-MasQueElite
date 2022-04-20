@@ -19,9 +19,11 @@ public class QuadrupleSimpleton : MonoBehaviour
 
     private bool solved;
     private ButtonBehaviour behaviour;
-    private List<KMSelectable> buttons;
+    private List<KMSelectable> buttons = new List<KMSelectable>();
 
     int moduleId;
+
+    public GameObject workaround;
 
     void Awake()
     {
@@ -29,10 +31,10 @@ public class QuadrupleSimpleton : MonoBehaviour
         moduleId++;
         int side;
         int seed = RuleSeed.GetRNG().Seed;
-        behaviour = ButtonBehaviour.InstantiateProperly(gameObject, makeBehaviourDecision(out side, seed));
-        var go = new GameObject();
-        buttons = go.GetComponents<KMSelectable>().ToList();
-        Destroy(go); //freeing resources
+        //workaround.AddComponent<ButtonBehaviour>();
+        makeBehaviourDecision(out side, seed);
+        behaviour = new ButtonBehaviour(side);
+        //behaviour = ButtonBehaviour.InstantiateProperly(gameObject, makeBehaviourDecision(out side, seed));
         MakeButtons(side);
     }
 
@@ -135,7 +137,7 @@ public class QuadrupleSimpleton : MonoBehaviour
                 M.HandlePass();
                 if (1 == 1) //TODO: SEED == 1
                 { if (random.Range(0, 50) == 0) DoEasterEgg(); }
-                else StartCoroutine(RandomSolved());
+                //else StartCoroutine(RandomSolved());
             }
         }
 
