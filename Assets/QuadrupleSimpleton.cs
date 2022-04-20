@@ -20,40 +20,31 @@ public class QuadrupleSimpleton : MonoBehaviour
     private bool solved;
     private ButtonBehaviour behaviour;
     private List<KMSelectable> buttons;
-
     int moduleId;
+    private int seed;
 
     void Awake()
     {
         Debug.LogFormat("[Quadruple Simpleton #{0}] T means Top, B means Bottom, L means Left, R means Right.", moduleId);
-        moduleId++;
-        int side;
-        int seed = RuleSeed.GetRNG().Seed;
-        behaviour = ButtonBehaviour.InstantiateProperly(gameObject, makeBehaviourDecision(out side, seed));
+        moduleId++; //every module has to have an ID number
+        int side; //how many buttons will the NxN square have?
+        seed = RuleSeed.GetRNG().Seed; //note: GetRNG just returns a MonoRandom which has the property I need ("Seed").
+        makeBehaviourDecision(out side); //"outside" lol :^
+        behaviour = ButtonBehaviour.InstantiateProperly(gameObject, side); //workaround for "Warning: You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
         var go = new GameObject();
         buttons = go.GetComponents<KMSelectable>().ToList();
-        Destroy(go); //freeing resources
         MakeButtons(side);
+        Destroy(go); //freeing resources
     }
-
-    void Start ()
-    {
-    }
-    //workaround for "Warning: You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
     //TODO: REMOVE UNUSED LIBRARIES
-    //still the workaround
-    //"outside" lol :^
     //TODO: CHECK MATF.LERP
-    //every module has to have an ID number
-    //note: GetRNG just returns a MonoRandom which has the property I need ("Seed").
-    //how many buttons will the NxN square have?
 
     /* It does three things: (based off "seed")
-     * - Returns "side" with value
+     * - Assigns "side" with a value
      * - Modifies the status light (to be visible or not)
      * - Sends an extra output message
      */
-    private int makeBehaviourDecision(out int side, int seed)
+    private void makeBehaviourDecision(out int side)
     {
         if (seed == 1)
             side = 2;
@@ -63,7 +54,6 @@ public class QuadrupleSimpleton : MonoBehaviour
             Debug.LogFormat("[Quadruple Simpleton #{0}] Button order is from top to bottom, right to left.", moduleId);
             StatusLight.SetActive(false);
         }
-        return side;
     }
 
     private void HookButtons(List<KMSelectable> buttons)
@@ -101,7 +91,7 @@ public class QuadrupleSimpleton : MonoBehaviour
     private void DoEasterEgg()
     {
         Audio.PlaySoundAtTransform("Lo-hicimos", Module.transform);
-        buttons[0].GetComponentInChildren<TextMesh>().text = "¡Lo";
+        buttons[0].GetComponentInChildren<TextMesh>().text = "¡Lo"; //a loop isn't necessary here
         buttons[1].GetComponentInChildren<TextMesh>().text = "hicimos!";
         buttons[2].GetComponentInChildren<TextMesh>().text = "We did";
         buttons[3].GetComponentInChildren<TextMesh>().text = "it!";
@@ -133,8 +123,8 @@ public class QuadrupleSimpleton : MonoBehaviour
             if (solved)
             {
                 M.HandlePass();
-                if (1 == 1) //TODO: SEED == 1
-                { if (random.Range(0, 50) == 0) DoEasterEgg(); }
+                if (seed == 1)
+                  { if (random.Range(0, 50) == 0) DoEasterEgg(); }
                 else StartCoroutine(RandomSolved());
             }
         }
