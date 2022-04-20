@@ -1,17 +1,19 @@
 fileFormatVersion: 2
-guid: 877e60b92bc94cf4a9708e25b38e1e88
+guid: 9d90732ff07625845bd471e2f392f9a0
 ModelImporter:
   serializedVersion: 22
   fileIDToRecycleName:
     100000: //RootNode
+    100002: default
     400000: //RootNode
-    2100000: Component_PuzzleBack_mat
-    2300000: //RootNode
-    3300000: //RootNode
-    4300000: Component_PuzzleBackground
+    400002: default
+    2100000: None
+    2300000: default
+    3300000: default
+    4300000: default
   externalObjects: {}
   materials:
-    importMaterials: 1
+    importMaterials: 0
     materialName: 0
     materialSearch: 1
     materialLocation: 1
@@ -42,10 +44,10 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
-    importVisibility: 1
+    importVisibility: 0
     importBlendShapes: 1
-    importCameras: 1
-    importLights: 1
+    importCameras: 0
+    importLights: 0
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
@@ -87,5 +89,5 @@ ModelImporter:
   humanoidOversampling: 1
   additionalBone: 0
   userData: 
-  assetBundleName: mod.bundle
+  assetBundleName: 
   assetBundleVariant: 

@@ -16,7 +16,7 @@ public class ButtonBehaviour : MonoBehaviour //interval for no UB: [2, inf[
 
     public Vector3 CalculateSize(float x, float y, float z) { return new Vector3(x / _n, y, z / _n); }
 
-    public Vector3 CalculatePositions(int cloneNumber, float y) //widthDis. and heightDis are different for the sake of applying two different solutions
+    public Vector3 CalculatePositions(int cloneNumber, float y) //widthDist. and heightDist. are different for the sake of applying two different solutions
     { //module boundaries: [0.1, -0.1]
 
         float margin = 0.2f / _n + 0.02f + _n / 1000f;

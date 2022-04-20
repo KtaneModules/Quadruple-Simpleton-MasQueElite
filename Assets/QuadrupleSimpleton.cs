@@ -22,13 +22,7 @@ public class QuadrupleSimpleton : MonoBehaviour
     private GameObject workaround;
     private ButtonBehaviour behaviour;
     private List<KMSelectable> buttons = new List<KMSelectable>();
-
-    int moduleId;
-
-    //TODO: REMOVE UNUSED LIBRARIES
-    //TODO: CHANGE SYMBOL TABLE TO QSIMP
-    //TODO: CAMBIAR EL FONDO DE MÓDULO A UNO MÁS CLARO COMO EL DE CORNERS
-    //TODO: REVISAR EL ARCHIVO DE TEXTO DE LOS TODOS PARA ESTE MÓDULO
+        int moduleId;
 
     private void Awake()
     {
@@ -167,12 +161,12 @@ public class QuadrupleSimpleton : MonoBehaviour
     {
         pressedButtonTransform.localPosition =
             new Vector3(pressedButtonTransform.localPosition.x,
-                        originalY - 0.0015f,
+                        originalY - 0.002f,
                         pressedButtonTransform.localPosition.z);
         yield return new WaitForSeconds(0.2f);
         pressedButtonTransform.localPosition =
             new Vector3(pressedButtonTransform.localPosition.x,
-                        originalY + 0.0015f,
+                        originalY,
                         pressedButtonTransform.localPosition.z);
     }
 }
