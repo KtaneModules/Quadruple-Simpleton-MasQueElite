@@ -19,11 +19,12 @@ public class QuadrupleSimpleton : MonoBehaviour
 
     private bool solved;
     private ButtonBehaviour behaviour;
-    private List<KMSelectable> buttons = new List<KMSelectable>();
+    private List<KMSelectable> buttons;
 
     int moduleId;
 
     public GameObject workaround;
+    GameObject w;
 
     void Awake()
     {
@@ -31,15 +32,14 @@ public class QuadrupleSimpleton : MonoBehaviour
         moduleId++;
         int side;
         int seed = RuleSeed.GetRNG().Seed;
-        //workaround.AddComponent<ButtonBehaviour>();
+        w = new GameObject();
+        w.AddComponent<ButtonBehaviour>();
+        //behaviour = ButtonBehaviour.InstantiateProperly(w, 2);
+        ButtonBehaviour.putPropierty(ref w, 2);
+        buttons = new List<KMSelectable>();
         makeBehaviourDecision(out side, seed);
-        behaviour = new ButtonBehaviour(side);
-        //behaviour = ButtonBehaviour.InstantiateProperly(gameObject, makeBehaviourDecision(out side, seed));
+        behaviour = w.GetComponent<ButtonBehaviour>();
         MakeButtons(side);
-    }
-
-    void Start ()
-    {
     }
     //workaround for "Warning: You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
     //TODO: REMOVE UNUSED LIBRARIES
@@ -55,7 +55,7 @@ public class QuadrupleSimpleton : MonoBehaviour
      * - Modifies the status light (to be visible or not)
      * - Sends an extra output message
      */
-    private int makeBehaviourDecision(out int side, int seed)
+    private void makeBehaviourDecision(out int side, int seed)
     {
         if (seed == 1)
             side = 2;
@@ -65,7 +65,6 @@ public class QuadrupleSimpleton : MonoBehaviour
             Debug.LogFormat("[Quadruple Simpleton #{0}] Button order is from top to bottom, right to left.", moduleId);
             StatusLight.SetActive(false);
         }
-        return side;
     }
 
     private void HookButtons(List<KMSelectable> buttons)

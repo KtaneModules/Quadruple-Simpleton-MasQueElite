@@ -4,17 +4,23 @@ using UnityEngine;
 
 public class ButtonBehaviour : MonoBehaviour //interval for no UB: [2, inf[
 {
+    [SerializeField]
     private int _n; //no "readonly" here due to the warning. rip
     private int _presses = 0;
     private enum Positions { BL, BR, TL, TR };
-    /*
+    
     public static ButtonBehaviour InstantiateProperly(GameObject go, int sideLength) //workaround for "Warning: You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
     {
         ButtonBehaviour bb = go.GetComponent<ButtonBehaviour>(); //GetComponent<T>() returns that ButtonBehaviour component
         bb._n = sideLength;
 
         return bb;
-    }*/
+    }
+    public static void putPropierty(ref GameObject go, int sideLength) //workaround for "Warning: You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
+    {
+        ButtonBehaviour bb = go.GetComponent<ButtonBehaviour>(); //GetComponent<T>() returns that ButtonBehaviour component
+        bb._n = sideLength;
+    }
 
     public ButtonBehaviour(int sideLength) { _n = sideLength; }
 
