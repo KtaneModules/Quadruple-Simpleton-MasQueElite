@@ -18,22 +18,53 @@ public class QuadrupleSimpleton : MonoBehaviour
         private int seed;
 
     private bool solved;
+    private float originalY;
     private GameObject workaround;
     private ButtonBehaviour behaviour;
     private List<KMSelectable> buttons = new List<KMSelectable>();
 
     int moduleId;
 
-    void Awake()
+    //TODO: REMOVE UNUSED LIBRARIES
+    //TODO: CHANGE SYMBOL TABLE TO QSIMP
+    //TODO: CAMBIAR EL FONDO DE MÓDULO A UNO MÁS CLARO COMO EL DE CORNERS
+    //TODO: REVISAR EL ARCHIVO DE TEXTO DE LOS TODOS PARA ESTE MÓDULO
+
+    private void Awake()
     {
-        Debug.LogFormat("[Quadruple Simpleton #{0}] T means Top, B means Bottom, L means Left, R means Right.", moduleId);
-        moduleId++;
-        seed = RuleSeed.GetRNG().Seed;
-        int side;
-        makeBehaviourDecision(out side);
-        WorkaroundTheWarning(side);
-        MakeButtons(side);
+        moduleId++; //every module has to have an ID number, starting from 1
+        ModuleLog("T means Top, B means Bottom, L means Left, R means Right.");
+        originalY = RefButton.transform.localPosition.y; //see ButtonPush
+        seed = RuleSeed.GetRNG().Seed; //note: GetRNG just returns a MonoRandom which has the property I need ("Seed")
+        int side; //how many buttons will the NxN square have?
+        MakeBehaviourDecision(out side); //"outside" lol :^
+        WorkaroundTheWarning(side); //see WorkaroundTheWarning
+        MakeButtons(side); //put the neccessary number of buttons on the module
+        ModuleLog(side * side + " buttons successfully made!");
     }
+
+    //no explanation needed
+    private void ModuleLog(string message) {
+        Debug.LogFormat("[Quadruple Simpleton #{0}] {1}", moduleId, message);
+    }
+
+    /* It does three things: (based off "seed")
+     * - Returns "side" with value
+     * - Modifies the status light (to be visible or not)
+     * - Sends an extra output message
+     */
+    private void MakeBehaviourDecision(out int side)
+    {
+        if (seed == 1)
+            side = 2;
+        else
+        {
+            side = RuleSeed.GetRNG().Next(9) % 9 + 3; //Interval: [3, 11]
+            ModuleLog("Button order is from top to bottom, right to left.");
+            StatusLight.SetActive(false);
+        }
+    }
+
     //workaround for the warning: "You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
     private void WorkaroundTheWarning(int side)
     {
@@ -41,41 +72,6 @@ public class QuadrupleSimpleton : MonoBehaviour
         workaround.AddComponent<ButtonBehaviour>();
         ButtonBehaviour.PutConstructorPropierty(ref workaround, side);
         behaviour = workaround.GetComponent<ButtonBehaviour>();
-    }
-
-    
-    //TODO: REMOVE UNUSED LIBRARIES
-    //still the workaround
-    //"outside" lol :^
-    //TODO: CHECK MATF.LERP
-    //every module has to have an ID number
-    //note: GetRNG just returns a MonoRandom which has the property I need ("Seed").
-    //how many buttons will the NxN square have?
-
-    /* It does three things: (based off "seed")
-     * - Returns "side" with value
-     * - Modifies the status light (to be visible or not)
-     * - Sends an extra output message
-     */
-    private void makeBehaviourDecision(out int side)
-    {
-        if (seed == 1)
-            side = 2;
-        else
-        {
-            side = RuleSeed.GetRNG().Next(8) % 9 + 3; //Interval: [3, 11]
-            Debug.LogFormat("[Quadruple Simpleton #{0}] Button order is from top to bottom, right to left.", moduleId);
-            StatusLight.SetActive(false);
-        }
-    }
-
-    private void HookButtons(List<KMSelectable> buttons)
-    {
-        for (int i = 0; i < buttons.Count; i++)
-        {
-            int j = i; //bug lmao TODO: CHECK THIS
-            buttons[j].OnInteract += () => ButtonHandler(buttons[j], j);
-        }
     }
 
     private void MakeButtons(int side)
@@ -99,6 +95,10 @@ public class QuadrupleSimpleton : MonoBehaviour
         Destroy(RefButton.gameObject);
         HookButtons(buttons);
     }
+    private void HookButtons(List<KMSelectable> buttons) {
+        for (int i = 0; i < buttons.Count; i++)
+            buttons[i].OnInteract += ButtonHandlerDelegateInstance(buttons[i], i);
+    }
 
     private void PlayButtonAudio() { Audio.PlaySoundAtTransform("Victory", Module.transform); }
     private void DoEasterEgg()
@@ -108,17 +108,20 @@ public class QuadrupleSimpleton : MonoBehaviour
         buttons[1].GetComponentInChildren<TextMesh>().text = "hicimos!";
         buttons[2].GetComponentInChildren<TextMesh>().text = "We did";
         buttons[3].GetComponentInChildren<TextMesh>().text = "it!";
-        Debug.LogFormat("[Quadruple Simpleton #{0}] You did it!! Congrats! :D", moduleId);
+        ModuleLog("You did it!! Congrats! :D");
     }
-    private bool ButtonHandler(KMSelectable button, int position)
+
+    KMSelectable.OnInteractHandler ButtonHandlerDelegateInstance(KMSelectable b, int p) {
+        return delegate { ButtonHandler(b, p); return false; };
+    }
+
+    private void ButtonHandler(KMSelectable button, int position)
     {
-        //just an abstraction
-        bool pressed = button.GetComponentInChildren<TextMesh>().text != "PUSH IT!";
+        bool pressed = button.GetComponentInChildren<TextMesh>().text != "PUSH IT!"; //just an abstraction
 
         if (pressed)
         {
-            Debug.LogFormat("[Quadruple Simpleton #{0}] {1}", moduleId,
-                             behaviour.AgainMessage(position));
+            ModuleLog(behaviour.AgainMessage(position));
             Audio.PlaySoundAtTransform("boing", button.transform);
             //already been solved?
             if (solved) button.AddInteractionPunch(100f);
@@ -128,21 +131,18 @@ public class QuadrupleSimpleton : MonoBehaviour
         {
             PlayButtonAudio();
             button.AddInteractionPunch();
-            Debug.LogFormat("[Quadruple Simpleton #{0}] {1}", moduleId,
-                             behaviour.ButtonMessage(position));
+            ModuleLog(behaviour.ButtonMessage(position));
             button.GetComponentInChildren<TextMesh>().text = "VICTORY!";
             //not solved? check
             solved = behaviour.CheckSolve();
             if (solved)
             {
                 M.HandlePass();
-                if (1 == 1) //TODO: SEED == 1
+                if (seed == 1)
                 { if (random.Range(0, 50) == 0) DoEasterEgg(); }
-                //else StartCoroutine(RandomSolved());
+                else StartCoroutine(RandomSolved());
             }
         }
-
-        return false;
     }
 
     private void ColorButtons(Color color)
@@ -163,16 +163,16 @@ public class QuadrupleSimpleton : MonoBehaviour
         ColorButtons(new Color(0, 0.8f, 0));
     }
 
-    IEnumerator ButtonPush(Transform pressedButtonTransform) //if you jitter click you can sink the button
+    IEnumerator ButtonPush(Transform pressedButtonTransform) //if you jitter click you can sink the button (...if you replace originalY for pressedButtonTransform.localPosition.y)
     {
         pressedButtonTransform.localPosition =
             new Vector3(pressedButtonTransform.localPosition.x,
-                        pressedButtonTransform.localPosition.y - 0.0015f,
+                        originalY - 0.0015f,
                         pressedButtonTransform.localPosition.z);
         yield return new WaitForSeconds(0.2f);
         pressedButtonTransform.localPosition =
             new Vector3(pressedButtonTransform.localPosition.x,
-                        pressedButtonTransform.localPosition.y + 0.0015f,
+                        originalY + 0.0015f,
                         pressedButtonTransform.localPosition.z);
     }
 }
