@@ -8,12 +8,13 @@ ModelImporter:
     400000: //RootNode
     400002: default
     2100000: None
+    2100002: defaultMat
     2300000: default
     3300000: default
     4300000: default
   externalObjects: {}
   materials:
-    importMaterials: 0
+    importMaterials: 1
     materialName: 0
     materialSearch: 1
     materialLocation: 1
@@ -89,5 +90,5 @@ ModelImporter:
   humanoidOversampling: 1
   additionalBone: 0
   userData: 
-  assetBundleName: 
+  assetBundleName: mod.bundle
   assetBundleVariant: 

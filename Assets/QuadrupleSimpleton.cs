@@ -97,7 +97,7 @@ public class QuadrupleSimpleton : MonoBehaviour
     private void PlayButtonAudio() { Audio.PlaySoundAtTransform("Victory", Module.transform); }
     private void DoEasterEgg()
     {
-        Audio.PlaySoundAtTransform("Lo-hicimos", Module.transform);
+        Audio.PlaySoundAtTransform("Dora", Module.transform);
         buttons[0].GetComponentInChildren<TextMesh>().text = "¡Lo";
         buttons[1].GetComponentInChildren<TextMesh>().text = "hicimos!";
         buttons[2].GetComponentInChildren<TextMesh>().text = "We did";
@@ -116,7 +116,7 @@ public class QuadrupleSimpleton : MonoBehaviour
         if (pressed)
         {
             ModuleLog(behaviour.AgainMessage(position));
-            Audio.PlaySoundAtTransform("boing", button.transform);
+            Audio.PlaySoundAtTransform("Bounce", button.transform);
             //already been solved?
             if (solved) button.AddInteractionPunch(100f);
             else StartCoroutine(ButtonPush(button.transform));
@@ -132,6 +132,7 @@ public class QuadrupleSimpleton : MonoBehaviour
             if (solved)
             {
                 M.HandlePass();
+                ModuleLog("SOLVED!");
                 if (seed == 1)
                 { if (random.Range(0, 50) == 0) DoEasterEgg(); }
                 else StartCoroutine(RandomSolved());
