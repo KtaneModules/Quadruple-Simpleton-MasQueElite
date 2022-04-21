@@ -5,36 +5,39 @@ using System.Linq;
 using UnityEngine;
 using KModkit;
 using random = UnityEngine.Random;
+using System.Text.RegularExpressions;
 
 //note: all the fields/methods I'm not commenting should be auto-documentable
 public class QuadrupleSimpleton : MonoBehaviour
 {
-    public KMBombModule M;
     public KMAudio Audio;
-    public KMSelectable RefButton;
+    public KMBombModule M;
     public KMSelectable Module;
+    public KMSelectable RefButton;
     public GameObject StatusLight;
         public KMRuleSeedable RuleSeed;
         private int seed;
 
+    private int side; //how many buttons will the NxN square have?
     private bool solved;
-    private float originalY;
-    private GameObject workaround;
+    private float originalY; //original y position of the button
+    private GameObject workaround; //see WorkaroundTheWarning
     private ButtonBehaviour behaviour;
     private List<KMSelectable> buttons = new List<KMSelectable>();
         int moduleId;
 
+    //note: I would've put "side" as a local variable, but TP exists so.
+
     private void Awake()
     {
+        if (TwitchPlaysActive) ModuleLog("TP KTANE IS ACTIVE.");
         moduleId++; //every module has to have an ID number, starting from 1
         ModuleLog("T means Top, B means Bottom, L means Left, R means Right.");
         originalY = RefButton.transform.localPosition.y; //see ButtonPush
         seed = RuleSeed.GetRNG().Seed; //note: GetRNG just returns a MonoRandom which has the property I need ("Seed")
-        int side; //how many buttons will the NxN square have?
-        MakeBehaviourDecision(out side); //"outside" lol :^
-        WorkaroundTheWarning(side); //see WorkaroundTheWarning
-        MakeButtons(side); //put the neccessary number of buttons on the module
-        ModuleLog(side * side + " buttons successfully made!");
+        MakeBehaviourDecision();
+        WorkaroundTheWarning(); //see WorkaroundTheWarning
+        MakeButtons(); //put the neccessary number of buttons on the module
     }
 
     //no explanation needed
@@ -42,25 +45,23 @@ public class QuadrupleSimpleton : MonoBehaviour
         Debug.LogFormat("[Quadruple Simpleton #{0}] {1}", moduleId, message);
     }
 
-    /* It does three things: (based off "seed")
-     * - Returns "side" with value
+    /* It does two things: (based off "seed")
+     * - Sets "side" a value
      * - Modifies the status light (to be visible or not)
-     * - Sends an extra output message
      */
-    private void MakeBehaviourDecision(out int side)
+    private void MakeBehaviourDecision()
     {
         if (seed == 1)
             side = 2;
         else
         {
             side = RuleSeed.GetRNG().Next(9) % 9 + 3; //Interval: [3, 11]
-            ModuleLog("Button order is from top to bottom, right to left.");
             StatusLight.SetActive(false);
         }
     }
 
     //workaround for the warning: "You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
-    private void WorkaroundTheWarning(int side)
+    private void WorkaroundTheWarning()
     {
         workaround = new GameObject();
         workaround.AddComponent<ButtonBehaviour>();
@@ -68,7 +69,7 @@ public class QuadrupleSimpleton : MonoBehaviour
         behaviour = workaround.GetComponent<ButtonBehaviour>();
     }
 
-    private void MakeButtons(int side)
+    private void MakeButtons()
     {
         for (int i = 0; i < side * side; i++)
         {
@@ -169,5 +170,67 @@ public class QuadrupleSimpleton : MonoBehaviour
             new Vector3(pressedButtonTransform.localPosition.x,
                         originalY,
                         pressedButtonTransform.localPosition.z);
+    }
+
+#pragma warning disable 414 //created but not used
+    private readonly string TwitchHelpMessage =
+        "Use <<!{0} (press|p|button|b) n>> to press the *n*th button (spaces are optional). The button order is in reverse reading order." +
+        "Also, you can do <<!{0} nothing>> to do nothing (as if you were actually doing something to solve the module, huh)." +
+        "You can chain commands (where n is) within the range [0, p], where *p* is `⌈(21/31)√b⌉`, and *b* is the number of buttons on the module.";
+    //to be fair, I could've put "((p)ress or (b)utton)", but people can understand that as "only p or b".
+    //Alternatively, I could put (p(ress) or b(utton)), which is the one that makes the most sense, but that would confuse people
+#pragma warning restore 414
+    bool TwitchPlaysActive;
+
+    private string parseChainCommand(string input)
+    {
+        Regex commandRegex = new Regex(@"^((press|p|button|b)?\s?(?<number>[1-4])\s?)+$|nothing$"); //I like highlights :)
+        Match commands =
+            Regex.Match(input, string.Format(@"^((press|p|button|b)?\s?(?<number>[1-{0}])\s?)+$|nothing$", side * side),
+            RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace); //flags: 100101
+        if (commands.Success)
+        {
+            int chainLimit = Mathf.CeilToInt(21f / 31 * side);
+            int presses = commands.Groups["number"].Captures.Count;
+            if (presses > chainLimit) return string.Format("sendtochat Sorry! You exceeded the number of buttons you can press at a time, which in this case is {0} (you tried to press {1}). I would've striked you, but I feel lazy.\tThe end? Question mark???", chainLimit, presses);
+            else return commands.Groups["number"].Captures.Cast<Capture>().ToArray().Join();
+        }
+        return "sx";
+    }
+
+#pragma warning disable 414 //created but not used
+    IEnumerator ProcessTwitchCommand(string input)
+#pragma warning restore 414 //created but not used
+    {
+        string logMessage = string.Format("You did the command: <<{0}>>. ", input);
+        string chainReturnValue = parseChainCommand(input).Trim();
+        if (chainReturnValue[0] != 's')
+        {
+            logMessage += "(valid)";
+            ModuleLog(logMessage);
+            if (chainReturnValue.ToLowerInvariant() == "nothing")
+            {
+                ModuleLog("You did the \"nothing\" command. u funni person eh");
+                yield return "sendtochat YES! YOU DID NOTHING! WOOHOO!! {0}{0}{0}{0}";
+            }
+            else
+                foreach (int number in Array.ConvertAll(chainReturnValue.Split(), Convert.ToInt32))
+                    buttons[number - 1].OnInteract();
+
+            yield return null;
+        }
+        else
+        {
+            logMessage += "(wrong: ";
+            if (chainReturnValue[1] == 'e')
+            {
+                yield return chainReturnValue;
+                logMessage += "too many buttons chained, ";
+            }
+            logMessage += "not executed)";
+            ModuleLog(logMessage);
+        }
+
+        yield break;
     }
 }

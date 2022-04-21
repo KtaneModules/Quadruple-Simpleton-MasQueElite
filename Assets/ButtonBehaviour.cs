@@ -20,7 +20,7 @@ public class ButtonBehaviour : MonoBehaviour //interval for no UB: [2, inf[
     { //module boundaries: [0.1, -0.1]
 
         float margin = 0.2f / _n + 0.02f + _n / 1000f;
-
+        
         float widthDistribution =
             Mathf.LerpUnclamped( //unclamped because makes any error visual
                 -0.1f + margin / 2,
@@ -36,7 +36,7 @@ public class ButtonBehaviour : MonoBehaviour //interval for no UB: [2, inf[
     public string AgainMessage(int cloneNumber)
     {
         if (_n == 2) return string.Format("You have just pressed the {0} button again. You should be proud of yourself :3", (Positions)cloneNumber);
-        return string.Format("You pressed button {0} and you changed absolutely nothing. Hooray!", _n * _n - cloneNumber);
+        return string.Format("You pressed button {0} and you changed absolutely nothing. Hooray!", cloneNumber + 1);
     }
     public string ButtonMessage(int cloneNumber)
     {
