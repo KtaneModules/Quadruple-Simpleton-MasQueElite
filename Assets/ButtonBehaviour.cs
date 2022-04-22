@@ -18,12 +18,12 @@ public class ButtonBehaviour : MonoBehaviour //interval for no UB: [2, inf[
     { //module boundaries: [0.1, -0.1]
 
         float margin = 0.2f / _n + 0.02f + _n / 1000f;
-        
+
         float widthDistribution =
             Mathf.LerpUnclamped( //unclamped because makes any error visual
                 -0.1f + margin / 2,
                  0.1f - margin / 2,
-                 cloneNumber % _n / (float)(_n - 1)) + 0.0012f;
+                 cloneNumber % _n / (float)(_n - 1)) + 2 / _n * 0.0014f;
 
         float distance = 0.2f - margin;
         float heightDistribution = cloneNumber / _n * distance / (_n - 1) - 0.1f + margin / 2; //magic formula :)

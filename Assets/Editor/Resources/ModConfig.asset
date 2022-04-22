@@ -17,9 +17,13 @@ MonoBehaviour:
   description: 'I needed some more buttons. So I just made them.
 
 
+    *Heads up:* when autosolving, be careful with the sound. I have already taken
+    precautions regarding this topic, but still, be careful.
+
+
     Thanks to all the people who helped me throughout modding, whether in this project
-    or any other one, love ya :3 <3'
+    or any other one. Love ya, seriously. :3 <3'
   version: 1.1
   outputFolder: C:\Program Files (x86)\Steam\steamapps\common\Keep Talking and Nobody
     Explodes\mods
-  previewImage: {fileID: 2800000, guid: c4e53270bef5fbf41829a7426f09ed8f, type: 3}
+  previewImage: {fileID: 2800000, guid: 8c5728c3aba52bc4385bd9e5ff1c8036, type: 3}
