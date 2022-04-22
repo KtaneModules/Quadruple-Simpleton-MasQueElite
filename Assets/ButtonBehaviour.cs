@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ButtonBehaviour : MonoBehaviour //interval for no UB: [2, inf[
 {
-    private int _n; //no "readonly" here due to the warning. rip
+    private int _n; //no "readonly" here due to the warning; it forces me to have the default constructor
     private int _presses = 0;
     private enum Positions { BL, BR, TL, TR };
 

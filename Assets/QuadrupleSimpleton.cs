@@ -6,6 +6,7 @@ using UnityEngine;
 using KModkit;
 using random = UnityEngine.Random;
 using System.Text.RegularExpressions;
+using System.Text;
 
 //note: all the fields/methods I'm not commenting should be auto-documentable
 public class QuadrupleSimpleton : MonoBehaviour
@@ -177,33 +178,77 @@ public class QuadrupleSimpleton : MonoBehaviour
         "Use <<!{0} (press|p|button|b) n>> to press the *n*th button (spaces are optional). The button order is in reverse reading order." +
         "Also, you can do <<!{0} nothing>> to do nothing (as if you were actually doing something to solve the module, huh)." +
         "You can chain commands (where n is) within the range [0, p], where *p* is `⌈(21/31)√b⌉`, and *b* is the number of buttons on the module.";
-    //to be fair, I could've put "((p)ress or (b)utton)", but people can understand that as "only p or b".
-    //Alternatively, I could put (p(ress) or b(utton)), which is the one that makes the most sense, but that would confuse people
+    //to be fair, I could've put "((p)ress or (b)utton)", but people can understand that as "only p or b"
+    //alternatively, I could put (p(ress) or b(utton)), which is the one that makes the most sense, but that would confuse people
 #pragma warning restore 414
     bool TwitchPlaysActive;
 
-    private string parseChainCommand(string input)
+    //the idea is: for example, take this array [132, 1, 5] and the threshold of 10, so... 132 -> 13 (/< 10) | 2 (separate the 13 from the 2, and comparing 13 with 10) -> <1> (< 10) | 32 => [1, 321, 5] => 321 -> 32 | 1 -> <3> | 21 => [1, 3, 215] ...
+    private string ParseCommandNumbers(string ns)
     {
-        Regex commandRegex = new Regex(@"^((press|p|button|b)?\s?(?<number>[1-4])\s?)+$|nothing$"); //I like highlights :)
+        int totalButtons = side * side;
+        StringBuilder resultArray = new StringBuilder(); //the result should be something like "12 34 56" //TODO: VER SI REALMENTE HACER FALTA UN STRINGBUILDER[]
+        string[] numberArray = ns.Split(); //and yes, here I'm doing "12 34 56" -> ["12", "34", "56"]
+        int length = numberArray.Length; //...because I need to see how many numbers do I have at the start
+        int i = 0;
+        while(i < length) //"customisable" foreach
+        {
+            string number = numberArray[i]; //I start with the first, and so on
+            while (Convert.ToInt32(number) > totalButtons) //as I explained, if (the current number does not surpass the threshold), or "while" the opposite of that
+            {
+                if (numberArray.Length - 1 == i) //it this is the last element, where would I put the separated numbers then? This is the solution for that
+                {
+                    string remainingNumber = number; //on a further note, I have to say this solution is convoluted to avoid using List<T>s as much as possible, without it being too illegible
+                    string storage = ""; //also do note this is not a brilliant nor a clunky implementation/solution, this is just what all real, respectable programmers do: solve problems applying quality solutions
+                    do
+                    {
+                        storage = remainingNumber.Substring(remainingNumber.Length - 1) + storage; //same as numberBuffer: pick the last number and store it (for later)
+                        remainingNumber = remainingNumber.Substring(0, remainingNumber.Length - 1); //pick the remaining number (from the left) to check it
+                        if (Convert.ToInt32(remainingNumber) <= totalButtons) //if it's still too large, don't do anything and keep pulling out digits
+                        {
+                            resultArray.Append(remainingNumber + " "); //the number is OK: put it in the result
+                            remainingNumber = storage; //the new number now is what I got from the storage
+                            storage = ""; //don't forget (that not)
+                        }
+                    } while (Convert.ToInt32(remainingNumber) > totalButtons);
+                    number = remainingNumber; //so I can append the number at the end, at the line before i++
+                    break;
+                }
+                string numberBuffer = number.Substring(number.Length - 1); //separate the digit one at a time from the end; this is the imaginary place the digit is in while the other part is being checked (or just assigned here, doesn't matter)
+                number = number.Substring(0, number.Length - 1); //this is the new number I will be checking for the threshold
+                numberArray[i+1] = numberBuffer + numberArray[i+1]; //put the cut number onto the next array element (you can say I "shift" it to the front of that number; and yes that is a JS moment)
+            }
+            length = numberArray.Length;
+            resultArray.Append(number + " ");
+            i++;
+        }
+        return resultArray.ToString();
+    }
+
+    private string ParseChainCommand(string input)
+    {
         Match commands =
-            Regex.Match(input, string.Format(@"^((press|p|button|b)?\s?(?<number>[1-{0}])\s?)+$|nothing$", side * side),
+            Regex.Match(input, @"^((press|p|button|b)?\s?(?<number>\d{1,3})\s?)+$|nothing$", //love those highlights
             RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace); //flags: 100101
         if (commands.Success)
         {
             int chainLimit = Mathf.CeilToInt(21f / 31 * side);
-            int presses = commands.Groups["number"].Captures.Count;
-            if (presses > chainLimit) return string.Format("sendtochat Sorry! You exceeded the number of buttons you can press at a time, which in this case is {0} (you tried to press {1}). I would've striked you, but I feel lazy.\tThe end? Question mark???", chainLimit, presses);
-            else return commands.Groups["number"].Captures.Cast<Capture>().ToArray().Join();
+            string presses = ParseCommandNumbers(commands.Groups["number"].Captures.Cast<Capture>().ToArray().Join()).TrimEnd(); //there's an extra space at the end when joining, also .Join() does magic things
+            int numberOfPresses = presses.Split().Length;
+            Debug.LogFormat("{0}, max: {1}", numberOfPresses, chainLimit);
+            if (presses.RegexMatch(new string[] { "^(0 ?)*$", @"^0+\d+$", @"\D0$" })) return "sx"; //since this method offers me to input a string, for readability purposes, I won't just mash up all the regexes
+            else if (numberOfPresses > chainLimit) return string.Format("sendtochat Sorry! You exceeded the number of buttons you can press at a time, which in this case is {0} (you tried to press {1}). I would've striked you, but I feel lazy.\tThe end? Question mark???", chainLimit, numberOfPresses);
+            else return presses;
         }
         return "sx";
     }
 
 #pragma warning disable 414 //created but not used
     IEnumerator ProcessTwitchCommand(string input)
-#pragma warning restore 414 //created but not used
+#pragma warning restore 414
     {
         string logMessage = string.Format("You did the command: <<{0}>>. ", input);
-        string chainReturnValue = parseChainCommand(input).Trim();
+        string chainReturnValue = ParseChainCommand(input).Trim();
         if (chainReturnValue[0] != 's')
         {
             logMessage += "(valid)";
@@ -214,8 +259,10 @@ public class QuadrupleSimpleton : MonoBehaviour
                 yield return "sendtochat YES! YOU DID NOTHING! WOOHOO!! {0}{0}{0}{0}";
             }
             else
+            {
                 foreach (int number in Array.ConvertAll(chainReturnValue.Split(), Convert.ToInt32))
                     buttons[number - 1].OnInteract();
+            }
 
             yield return null;
         }
