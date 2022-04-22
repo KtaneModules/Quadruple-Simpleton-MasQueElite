@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ButtonBehaviour : MonoBehaviour //interval for no UB: [2, inf[
 {
@@ -25,7 +23,7 @@ public class ButtonBehaviour : MonoBehaviour //interval for no UB: [2, inf[
             Mathf.LerpUnclamped( //unclamped because makes any error visual
                 -0.1f + margin / 2,
                  0.1f - margin / 2,
-                 cloneNumber % _n / (float)(_n - 1));
+                 cloneNumber % _n / (float)(_n - 1)) + 0.0012f;
 
         float distance = 0.2f - margin;
         float heightDistribution = cloneNumber / _n * distance / (_n - 1) - 0.1f + margin / 2; //magic formula :)

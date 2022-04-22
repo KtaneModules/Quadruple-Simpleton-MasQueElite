@@ -2,11 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using KModkit;
-using random = UnityEngine.Random;
 using System.Text.RegularExpressions;
 using System.Text;
+using UnityEngine;
+using random = UnityEngine.Random;
 
 //note: all the fields/methods I'm not commenting should be auto-documentable
 public class QuadrupleSimpleton : MonoBehaviour
@@ -99,7 +98,7 @@ public class QuadrupleSimpleton : MonoBehaviour
     private void PlayButtonAudio() { Audio.PlaySoundAtTransform("Victory", Module.transform); }
     private void DoEasterEgg()
     {
-        Audio.PlaySoundAtTransform("Dora", Module.transform);
+        Audio.PlaySoundAtTransform("Lo-hicimos", Module.transform);
         buttons[0].GetComponentInChildren<TextMesh>().text = "¡Lo";
         buttons[1].GetComponentInChildren<TextMesh>().text = "hicimos!";
         buttons[2].GetComponentInChildren<TextMesh>().text = "We did";
@@ -118,7 +117,7 @@ public class QuadrupleSimpleton : MonoBehaviour
         if (pressed)
         {
             ModuleLog(behaviour.AgainMessage(position));
-            Audio.PlaySoundAtTransform("Bounce", button.transform);
+            Audio.PlaySoundAtTransform("boing", button.transform);
             //already been solved?
             if (solved) button.AddInteractionPunch(100f);
             else StartCoroutine(ButtonPush(button.transform));
@@ -177,11 +176,13 @@ public class QuadrupleSimpleton : MonoBehaviour
     private readonly string TwitchHelpMessage =
         "Use <<!{0} (press|p|button|b) n>> to press the *n*th button (spaces are optional). The button order is in reverse reading order." +
         "Also, you can do <<!{0} nothing>> to do nothing (as if you were actually doing something to solve the module, huh)." +
-        "You can chain commands (where n is) within the range [0, p], where *p* is `⌈(21/31)√b⌉`, and *b* is the number of buttons on the module.";
+        "You can chain commands up to *p* buttons, where *p* is `⌈(21/31)√b⌉`, and *b* is the number of buttons on the module.";
     //to be fair, I could've put "((p)ress or (b)utton)", but people can understand that as "only p or b"
     //alternatively, I could put (p(ress) or b(utton)), which is the one that makes the most sense, but that would confuse people
 #pragma warning restore 414
+#pragma warning disable 649
     bool TwitchPlaysActive;
+#pragma warning disable 649
 
     //the idea is: for example, take this array [132, 1, 5] and the threshold of 10, so... 132 -> 13 (/< 10) | 2 (separate the 13 from the 2, and comparing 13 with 10) -> <1> (< 10) | 32 => [1, 321, 5] => 321 -> 32 | 1 -> <3> | 21 => [1, 3, 215] ...
     private string ParseCommandNumbers(string ns)
@@ -235,7 +236,6 @@ public class QuadrupleSimpleton : MonoBehaviour
             int chainLimit = Mathf.CeilToInt(21f / 31 * side);
             string presses = ParseCommandNumbers(commands.Groups["number"].Captures.Cast<Capture>().ToArray().Join()).TrimEnd(); //there's an extra space at the end when joining, also .Join() does magic things
             int numberOfPresses = presses.Split().Length;
-            Debug.LogFormat("{0}, max: {1}", numberOfPresses, chainLimit);
             if (presses.RegexMatch(new string[] { "^(0 ?)*$", @"^0+\d+$", @"\D0$" })) return "sx"; //since this method offers me to input a string, for readability purposes, I won't just mash up all the regexes
             else if (numberOfPresses > chainLimit) return string.Format("sendtochat Sorry! You exceeded the number of buttons you can press at a time, which in this case is {0} (you tried to press {1}). I would've striked you, but I feel lazy.\tThe end? Question mark???", chainLimit, numberOfPresses);
             else return presses;
