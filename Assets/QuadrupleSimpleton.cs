@@ -96,6 +96,11 @@ public class QuadrupleSimpleton : MonoBehaviour
             buttons[i].OnInteract += ButtonHandlerDelegateInstance(buttons[i], i);
     }
 
+    KMSelectable.OnInteractHandler ButtonHandlerDelegateInstance(KMSelectable b, int p)
+    {
+        return delegate { ButtonHandler(b, p); return false; };
+    }
+
     private void PlayButtonAudio() { Audio.PlaySoundAtTransform("Victory", Module.transform); }
     private void DoEasterEgg(bool forced = false)
     {
@@ -109,10 +114,6 @@ public class QuadrupleSimpleton : MonoBehaviour
             buttons[i].GetComponentInChildren<TextMesh>().text = extraStrings[i];
 
         ModuleLog(extraStrings[4]);
-    }
-
-    KMSelectable.OnInteractHandler ButtonHandlerDelegateInstance(KMSelectable b, int p) {
-        return delegate { ButtonHandler(b, p); return false; };
     }
 
     private void ButtonHandler(KMSelectable button, int position)
@@ -183,10 +184,10 @@ public class QuadrupleSimpleton : MonoBehaviour
 
 #pragma warning disable 414 //created but not used
     private readonly string TwitchHelpMessage =
-        "Use <<!{0} (press|p|button|b) n>> to press the nth button (spaces are optional). Starting at 1, the order is in reverse reading order. " +
-        "Also, you can do <<!{0} nothing>> to do nothing. " +
-        "You can chain commands up to p buttons, where p is ⌈(21/31)√b⌉, and *b* is the number of buttons on the module. " +
-        "You can mute the module as well; only if you are in ruleseed though. Just type <<mute>> or <<m>>, BUT that would make me sad :(";
+        "Use <<!{0} (press|p|button|b) n>> to press the nth button (spaces are optional), <<!{0} m|mute>> to mute the module (ruleseed only, AND makes me sad), and <<!{0} n|nothing>> to do nothing." +
+        "Counting starts at 1, the order is in reverse arabic reading order." +
+        "Also, you can chain commands up to p buttons, where p is ⌈(21/31)√b⌉, and b is the number of buttons on the module." +
+        "Example: !{0} press 14. Weird example: 1p3 b4button2";
     //to be fair, I could've put "((p)ress or (b)utton)", but people can understand that as "only p or b"
     //alternatively, I could put (p(ress) or b(utton)), which is the one that makes the most sense, but that would confuse people
 #pragma warning restore 414
@@ -202,7 +203,7 @@ public class QuadrupleSimpleton : MonoBehaviour
         string[] numberArray = ns.Split(); //and yes, here I'm doing "12 34 56" -> ["12", "34", "56"]
         int length = numberArray.Length; //...because I need to see how many numbers do I have at the start
         int i = 0;
-        while(i < length) //"customisable" foreach
+        while (i < length) //"customisable" foreach
         {
             string number = numberArray[i]; //I start with the first, and so on
             while (Convert.ToInt32(number) > totalButtons) //as I explained, if (the current number does not surpass the threshold), or "while" the opposite of that
@@ -239,7 +240,7 @@ public class QuadrupleSimpleton : MonoBehaviour
     //welp, this is what you get if you want to allow the users to chain commands (and actually not braking the TP system of your module)
     private string ParseChainCommand(string input)
     {
-        if (new string[] {"nothing", "mute", "m"}.Contains(input)) return input;
+        if (new string[] {"nothing", "n", "mute", "m"}.Contains(input)) return input;
         Match commands =
             Regex.Match(input, @"^((press|p|button|b)?\s?(?<number>\d{1,3})\s?)+$", //love those highlights
             RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace); //flags: 100101
@@ -274,7 +275,7 @@ public class QuadrupleSimpleton : MonoBehaviour
         if (chainReturnValue[0] != 's')
         {
             logMessage += "(valid)";
-            if (chainReturnValue.ToLowerInvariant() == "nothing")
+            if (char.ToLowerInvariant(chainReturnValue[0]) == 'n')
             {
                 ModuleLog("You did the \"nothing\" command. u funni person eh");
                 yield return string.Format("sendtochat YES! YOU DID NOTHING! WOOHOO!! {0} (well, as if you were actually doing something to solve the module, huh)", GenerateSalt());
@@ -291,7 +292,7 @@ public class QuadrupleSimpleton : MonoBehaviour
                     }
                     else
                     {
-                        yield return "sendtochat Okay. Fine. TTwTT.\nThere's no turn back, eh?.";
+                        yield return "sendtochat Okay. Fine. TTwTT."+Environment.NewLine+"There's no turn back, eh?.";
                         muted = true;
                     }
                 }

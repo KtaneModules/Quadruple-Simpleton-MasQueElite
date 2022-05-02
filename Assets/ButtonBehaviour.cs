@@ -27,7 +27,7 @@ public class ButtonBehaviour : MonoBehaviour //interval for no UB: [2, inf[
 
         float distance = 0.2f - margin;
         float heightDistribution = cloneNumber / _n * distance / (_n - 1) - 0.1f + margin / 2; //magic formula :)
-        
+
         return new Vector3(widthDistribution, y, heightDistribution);
     }
 
