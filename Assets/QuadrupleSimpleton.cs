@@ -31,7 +31,6 @@ public class QuadrupleSimpleton : MonoBehaviour
 
     private void Awake()
     {
-        if (TwitchPlaysActive) ModuleLog("TP KTANE IS ACTIVE.");
         moduleId = moduleIdCounter++; //every module has to have an ID number, starting from 1. Although... The LFA needs both moduleIdCounter AND moduleId... Oh well
         ModuleLog("T means Top, B means Bottom, L means Left, R means Right.");
         originalY = RefButton.transform.localPosition.y; //see ButtonPush
@@ -39,6 +38,11 @@ public class QuadrupleSimpleton : MonoBehaviour
         MakeBehaviourDecision();
         WorkaroundTheWarning(); //see WorkaroundTheWarning
         MakeButtons(); //put the neccessary number of buttons on the module
+    }
+
+    private void Start()
+    {
+        M.OnActivate += () => { if (TwitchPlaysActive) ModuleLog("TP KTANE IS ACTIVE."); };
     }
 
     //no explanation needed
@@ -184,10 +188,10 @@ public class QuadrupleSimpleton : MonoBehaviour
 
 #pragma warning disable 414 //created but not used
     private readonly string TwitchHelpMessage =
-        "Use <<!{0} (press|p|button|b) n>> to press the nth button (spaces are optional), <<!{0} m|mute>> to mute the module (ruleseed only, AND makes me sad), and <<!{0} n|nothing>> to do nothing." +
-        "Counting starts at 1, the order is in reverse arabic reading order." +
-        "Also, you can chain commands up to p buttons, where p is ⌈(21/31)√b⌉, and b is the number of buttons on the module." +
-        "Example: !{0} press 14. Weird example: 1p3 b4button2";
+        "Use <<!{0} (press|p|button|b) n>> to press the nth button (spaces are optional), <<!{0} m|mute>> to mute the module (ruleseed only), and <<!{0} n|nothing>> to do nothing." +
+        " Counting starts at 1; the order is in reverse arabic reading order." +
+        " You can chain commands up to p buttons, where p is ⌈(21/31)√b⌉, and b is the number of buttons on the module." +
+        " Example: !{0} press 14. Weird example: !{0} 1p3 b4button    2";
     //to be fair, I could've put "((p)ress or (b)utton)", but people can understand that as "only p or b"
     //alternatively, I could put (p(ress) or b(utton)), which is the one that makes the most sense, but that would confuse people
 #pragma warning restore 414
@@ -206,7 +210,9 @@ public class QuadrupleSimpleton : MonoBehaviour
         while (i < length) //"customisable" foreach
         {
             string number = numberArray[i]; //I start with the first, and so on
-            while (Convert.ToInt32(number) > totalButtons) //as I explained, if (the current number does not surpass the threshold), or "while" the opposite of that
+            int comparedNumber;
+            if (!int.TryParse(number, out comparedNumber)) comparedNumber = 999;
+            while (comparedNumber > totalButtons) //as I explained, if (the current number does not surpass the threshold), or "while" the opposite of that
             {
                 if (numberArray.Length - 1 == i) //it this is the last element, where would I put the separated numbers then? This is the solution for that
                 {
@@ -216,19 +222,22 @@ public class QuadrupleSimpleton : MonoBehaviour
                     {
                         storage = remainingNumber.Substring(remainingNumber.Length - 1) + storage; //same as numberBuffer: pick the last number and store it (for later)
                         remainingNumber = remainingNumber.Substring(0, remainingNumber.Length - 1); //pick the remaining number (from the left) to check it
-                        if (Convert.ToInt32(remainingNumber) <= totalButtons) //if it's still too large, don't do anything and keep pulling out digits
+                        if (!int.TryParse(remainingNumber, out comparedNumber)) comparedNumber = 999; //overflow fix
+                        if (comparedNumber <= totalButtons) //if it's still too large, don't do anything and keep pulling out digits
                         {
                             resultArray += remainingNumber + " "; //the number is OK: put it in the result
                             remainingNumber = storage; //the new number now is what I got from the storage
+                            if (!int.TryParse(remainingNumber, out comparedNumber)) comparedNumber = 999; //overflow fix
                             storage = ""; //don't forget (that not)
                         }
-                    } while (Convert.ToInt32(remainingNumber) > totalButtons);
+                    } while (comparedNumber > totalButtons);
                     number = remainingNumber; //so I can append the number at the end, at the line before i++
                     break;
                 }
                 string numberBuffer = number.Substring(number.Length - 1); //separate the digit one at a time from the end; this is the imaginary place the digit is in while the other part is being checked (or just assigned here, doesn't matter)
                 number = number.Substring(0, number.Length - 1); //this is the new number I will be checking for the threshold
                 numberArray[i+1] = numberBuffer + numberArray[i+1]; //put the cut number onto the next array element (you can say I "shift" it to the front of that number; and yes that is a JS moment)
+                if (!int.TryParse(number, out comparedNumber)) comparedNumber = 999; //overflow fix
             }
             length = numberArray.Length;
             resultArray += number + " ";
@@ -242,14 +251,14 @@ public class QuadrupleSimpleton : MonoBehaviour
     {
         if (new string[] {"nothing", "n", "mute", "m"}.Contains(input)) return input;
         Match commands =
-            Regex.Match(input, @"^((press|p|button|b)?\s?(?<number>\d{1,3})\s?)+$", //love those highlights
+            Regex.Match(input, @"^((press|p|button|b)?(\s+)?(?<number>\d{1,3})(\s+)?)+$", //love those highlights
             RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace); //flags: 100101
         if (commands.Success)
         {
             int chainLimit = Mathf.CeilToInt(21f / 31 * side);
             string presses = ParseCommandNumbers(commands.Groups["number"].Captures.Cast<Capture>().ToArray().Join()).TrimEnd(); //there's an extra space at the end when joining, also .Join() does magic things
             int numberOfPresses = presses.Split().Length;
-            if (presses.RegexMatch(new string[] { "^(0 ?)*$", @"^0+\d*$", @"\D0$" })) return "sx"; //since this method offers me to input a string, for readability purposes, I won't just mash up all the regexes
+            if (presses.RegexMatch(new string[] { "^(0 ?)+", @"( |^)(0+\d+ ?)+", " 0$" })) return "sx"; //since this method offers me to input a string, for readability purposes, I won't just mash up all the regexes
             else if (numberOfPresses > chainLimit) return string.Format("sendtochaterror Sorry! You exceeded the number of buttons you can press at a time, which in this case is {0} (you tried to press {1}). I would've striked you, but I feel lazy.\tThe end? Question mark???", chainLimit, numberOfPresses);
             else return presses;
         }
