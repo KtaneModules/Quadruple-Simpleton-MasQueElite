@@ -198,6 +198,11 @@ Prefab:
       propertyPath: m_Name
       value: QuadSimpleton
       objectReference: {fileID: 0}
+    - target: {fileID: 114082081498235576, guid: 7a0f5dbc64f25cc41ad4025b61e1f17c,
+        type: 2}
+      propertyPath: _seed
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 7a0f5dbc64f25cc41ad4025b61e1f17c, type: 2}
   m_IsPrefabParent: 0

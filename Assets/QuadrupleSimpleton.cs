@@ -22,27 +22,26 @@ public class QuadrupleSimpleton : MonoBehaviour
     private float originalY; //original y position of the button
     private bool muted = false;
     private GameObject workaround; //see WorkaroundTheWarning
-    private ButtonBehaviour behaviour;
+    private IButtonBehaviour behaviour;
     private List<KMSelectable> buttons = new List<KMSelectable>();
         static int moduleIdCounter = 1;
         int moduleId;
 
-    //note: I would've put "side" as a local variable, but TP exists so.
-
     private void Awake()
     {
         moduleId = moduleIdCounter++; //every module has to have an ID number, starting from 1. Although... The LFA needs both moduleIdCounter AND moduleId... Oh well
-        ModuleLog("T means Top, B means Bottom, L means Left, R means Right.");
-        originalY = RefButton.transform.localPosition.y; //see ButtonPush
+        originalY = RefButton.transform.localPosition.y; //used in ButtonPush
         seed = RuleSeed.GetRNG().Seed; //note: GetRNG just returns a MonoRandom which has the property I need ("Seed")
+        if (!IsRuleseed()) ModuleLog("T means Top, B means Bottom, L means Left, R means Right.");
         MakeBehaviourDecision();
-        WorkaroundTheWarning(); //see WorkaroundTheWarning
+        WorkaroundTheWarning();
         MakeButtons(); //put the neccessary number of buttons on the module
     }
 
     private void Start()
     {
         M.OnActivate += () => { if (TwitchPlaysActive) ModuleLog("TP KTANE IS ACTIVE."); };
+        TwitchHelpMessage = behaviour.HelpMessage;
     }
 
     //no explanation needed
@@ -50,13 +49,15 @@ public class QuadrupleSimpleton : MonoBehaviour
         Debug.LogFormat("[Quadruple Simpleton #{0}] {1}", moduleId, message);
     }
 
+    private bool IsRuleseed() { return seed != 1; }
+
     /* It does two things: (based off "seed")
      * - Sets "side" a value
      * - Modifies the status light (to be visible or not)
      */
     private void MakeBehaviourDecision()
     {
-        if (seed == 1)
+        if (!IsRuleseed())
             side = 2;
         else
         {
@@ -66,12 +67,44 @@ public class QuadrupleSimpleton : MonoBehaviour
     }
 
     //workaround for the warning: "You are trying to create a MonoBehaviour using the 'new' keyword. This is not allowed. MonoBehaviours can only be added using AddComponent()."
+    //instanciates the appropiate IButtonBehaviour class without using the "new" keyword, but withing a GameObject
     private void WorkaroundTheWarning()
     {
         workaround = new GameObject();
-        workaround.AddComponent<ButtonBehaviour>();
-        ButtonBehaviour.PutConstructorPropierty(ref workaround, side);
-        behaviour = workaround.GetComponent<ButtonBehaviour>();
+        if (IsRuleseed())
+        {
+            behaviour = workaround.AddComponent<RandomBehaviour>(); //AddComponent<RandomBehaviour>() returns that RandomBehaviour component (as well)
+            RandomBehaviour.PutConstructorPropierty(ref workaround, side);
+        }
+        else
+            behaviour = workaround.AddComponent<NormalBehaviour>();
+    }
+
+    /* Mirrors the X axis, taking the middle as the center
+     * Example:
+     * -- Input:
+     *   1 2 3
+     *   4 5 6
+     *   7 8 9
+     * -- Output:
+     *   7 8 9
+     *   4 5 6
+     *   1 2 3
+     * TODO: Make this O(1)
+     */
+    private int MirrorX(int input)
+    {
+        int total = side * side;
+        for (int i = 0; i <= side - 2; i++)
+        {
+            if (input <= side * (side - (side - i) + 1) || input > total - side * (side - (side - i) + 1))
+            {
+                int offset = total - side * (2 * (side - (side - i)) + 1);
+                if (input > side * (side - (side - i) + 1)) return input - offset;
+                else return input + offset;
+            }
+        }
+        return -1;
     }
 
     private void MakeButtons()
@@ -85,8 +118,7 @@ public class QuadrupleSimpleton : MonoBehaviour
                     clone.transform.localScale.y,
                     clone.transform.localScale.z);
             clone.transform.localPosition =
-                behaviour.CalculatePositions(
-                    i, clone.transform.localPosition.y);
+                behaviour.CalculatePosition(MirrorX(i + 1) - 1, originalY);
 
             buttons.Add(clone.GetComponent<KMSelectable>());
         }
@@ -99,19 +131,17 @@ public class QuadrupleSimpleton : MonoBehaviour
         for (int i = 0; i < buttons.Count; i++)
             buttons[i].OnInteract += ButtonHandlerDelegateInstance(buttons[i], i);
     }
-
     KMSelectable.OnInteractHandler ButtonHandlerDelegateInstance(KMSelectable b, int p)
     {
         return delegate { ButtonHandler(b, p); return false; };
     }
 
-    private void PlayButtonAudio() { Audio.PlaySoundAtTransform("Victory", Module.transform); }
     private void DoEasterEgg(bool forced = false)
     {
-        if (!muted) Audio.PlaySoundAtTransform("Lo-hicimos", Module.transform);
+        Audio.PlaySoundAtTransform("Lo-hicimos", Module.transform);
 
         string[] extraStrings;
-        if (forced) extraStrings = new string[] { "do", "it!", "You", "didn't", "You forced solved. Shame." };
+        if (forced) extraStrings = new string[] { "You", "didn't", "do", "it!", "You forced solved. Shame." };
         else extraStrings = new string[] { "We did", "it!", "¡Lo", "hicimos!", "You did it!! Congrats! :D" };
 
         for (int i = 0; i < 4; i++)
@@ -122,9 +152,9 @@ public class QuadrupleSimpleton : MonoBehaviour
 
     private void ButtonHandler(KMSelectable button, int position)
     {
-        bool pressed = button.GetComponentInChildren<TextMesh>().text != "PUSH IT!"; //just an abstraction
+        bool alreadyPressed = button.GetComponentInChildren<TextMesh>().text != "PUSH IT!";
 
-        if (pressed)
+        if (alreadyPressed)
         {
             if (!muted) Audio.PlaySoundAtTransform("boing", button.transform);
             if (TwitchPlaysActive) button.AddInteractionPunch(100f);
@@ -136,7 +166,7 @@ public class QuadrupleSimpleton : MonoBehaviour
         }
         else
         {
-            if (!muted) PlayButtonAudio();
+            if (!muted) Audio.PlaySoundAtTransform("Victory", Module.transform);
             if (TwitchPlaysActive) StartCoroutine(ButtonPush(button.transform));
 
             button.AddInteractionPunch();
@@ -148,7 +178,7 @@ public class QuadrupleSimpleton : MonoBehaviour
             {
                 M.HandlePass();
                 ModuleLog("SOLVED!");
-                if (seed == 1)
+                if (!IsRuleseed())
                 { if (random.Range(0, 50) == 0) DoEasterEgg(); }
                 else StartCoroutine(RandomSolved());
             }
@@ -173,7 +203,7 @@ public class QuadrupleSimpleton : MonoBehaviour
         ColorButtons(new Color(0, 0.8f, 0));
     }
 
-    IEnumerator ButtonPush(Transform pressedButtonTransform) //if you jitter click you can sink the button (...if you replace originalY for pressedButtonTransform.localPosition.y)
+    IEnumerator ButtonPush(Transform pressedButtonTransform)
     {
         pressedButtonTransform.localPosition =
             new Vector3(pressedButtonTransform.localPosition.x,
@@ -187,79 +217,53 @@ public class QuadrupleSimpleton : MonoBehaviour
     }
 
 #pragma warning disable 414 //created but not used
-    private readonly string TwitchHelpMessage =
-        "Use <<!{0} (press|p|button|b) n>> to press the nth button (spaces are optional), <<!{0} m|mute>> to mute the module (ruleseed only), and <<!{0} n|nothing>> to do nothing." +
-        " Counting starts at 1; the order is in reverse arabic reading order." +
-        " You can chain commands up to p buttons, where p is ⌈(21/31)√b⌉, and b is the number of buttons on the module." +
-        " Example: !{0} press 14. Weird example: !{0} 1p3 b4button    2";
-    //to be fair, I could've put "((p)ress or (b)utton)", but people can understand that as "only p or b"
-    //alternatively, I could put (p(ress) or b(utton)), which is the one that makes the most sense, but that would confuse people
+    private string TwitchHelpMessage;
 #pragma warning restore 414
 #pragma warning disable 649 //not assigned and will always have the default value
     bool TwitchPlaysActive;
 #pragma warning disable 649
 
+    private bool ValueObliesThreshold(string value, int threshold)
+    {
+        if (value.Length > 3) value = "999";
+        return Convert.ToInt32(value) <= threshold;
+    }
+
     //the idea is: for example, take this array [132, 1, 5] and the threshold of 10, so... 132 -> 13 (/< 10) | 2 (separate the 13 from the 2, and comparing 13 with 10) -> <1> (< 10) | 32 => [1, 321, 5] => 321 -> 32 | 1 -> <3> | 21 => [1, 3, 215] ...
-    private string ParseCommandNumbers(string ns)
+    private string ParseCommandNumbers(List<string> input) //see "CurrentIdea.png"
     {
         int totalButtons = side * side;
-        string resultArray = string.Empty; //the result should be something like "12 34 56"
-        string[] numberArray = ns.Split(); //and yes, here I'm doing "12 34 56" -> ["12", "34", "56"]
-        int length = numberArray.Length; //...because I need to see how many numbers do I have at the start
-        int i = 0;
-        while (i < length) //"customisable" foreach
+        var output = new List<string>();
+        for (int i = 0; i < input.Count; i++)
         {
-            string number = numberArray[i]; //I start with the first, and so on
-            int comparedNumber;
-            if (!int.TryParse(number, out comparedNumber)) comparedNumber = 999;
-            while (comparedNumber > totalButtons) //as I explained, if (the current number does not surpass the threshold), or "while" the opposite of that
+            string buffer = input[i];
+            for (int j = buffer.Length - 1; j >= 0; j--)
             {
-                if (numberArray.Length - 1 == i) //it this is the last element, where would I put the separated numbers then? This is the solution for that
+                if (ValueObliesThreshold(buffer, totalButtons))
                 {
-                    string remainingNumber = number; //on a further note, I have to say this solution is convoluted to avoid using List<T>s as much as possible, without it being too illegible
-                    string storage = ""; //also do note this is not a brilliant nor a clunky implementation/solution, this is just what all real, respectable programmers do: solve problems applying quality solutions
-                    do
-                    {
-                        storage = remainingNumber.Substring(remainingNumber.Length - 1) + storage; //same as numberBuffer: pick the last number and store it (for later)
-                        remainingNumber = remainingNumber.Substring(0, remainingNumber.Length - 1); //pick the remaining number (from the left) to check it
-                        if (!int.TryParse(remainingNumber, out comparedNumber)) comparedNumber = 999; //overflow fix
-                        if (comparedNumber <= totalButtons) //if it's still too large, don't do anything and keep pulling out digits
-                        {
-                            resultArray += remainingNumber + " "; //the number is OK: put it in the result
-                            remainingNumber = storage; //the new number now is what I got from the storage
-                            if (!int.TryParse(remainingNumber, out comparedNumber)) comparedNumber = 999; //overflow fix
-                            storage = ""; //don't forget (that not)
-                        }
-                    } while (comparedNumber > totalButtons);
-                    number = remainingNumber; //so I can append the number at the end, at the line before i++
+                    output.Add(buffer);
                     break;
                 }
-                string numberBuffer = number.Substring(number.Length - 1); //separate the digit one at a time from the end; this is the imaginary place the digit is in while the other part is being checked (or just assigned here, doesn't matter)
-                number = number.Substring(0, number.Length - 1); //this is the new number I will be checking for the threshold
-                numberArray[i+1] = numberBuffer + numberArray[i+1]; //put the cut number onto the next array element (you can say I "shift" it to the front of that number; and yes that is a JS moment)
-                if (!int.TryParse(number, out comparedNumber)) comparedNumber = 999; //overflow fix
+                if (i == input.Count - 1) input.Add("");
+                input[i + 1] = buffer.Substring(j) + input[i + 1];
+                buffer = buffer.Substring(0, j);
             }
-            length = numberArray.Length;
-            resultArray += number + " ";
-            i++;
         }
-        return resultArray.ToString();
+        return string.Join(" ", output.ToArray());
     }
 
     //welp, this is what you get if you want to allow the users to chain commands (and actually not braking the TP system of your module)
     private string ParseChainCommand(string input)
     {
         if (new string[] {"nothing", "n", "mute", "m"}.Contains(input)) return input;
-        Match commands =
-            Regex.Match(input, @"^((press|p|button|b)?(\s+)?(?<number>\d{1,3})(\s+)?)+$", //love those highlights
-            RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace); //flags: 100101
+        Match commands = behaviour.CommandRegex.Match(input); //love those highlights
+            
         if (commands.Success)
         {
-            int chainLimit = Mathf.CeilToInt(21f / 31 * side);
-            string presses = ParseCommandNumbers(commands.Groups["number"].Captures.Cast<Capture>().ToArray().Join()).TrimEnd(); //there's an extra space at the end when joining, also .Join() does magic things
+            string presses = ParseCommandNumbers(commands.Groups["number"].Captures.Cast<Capture>().Join().Split().ToList()); //.Join() does magic things
             int numberOfPresses = presses.Split().Length;
             if (presses.RegexMatch(new string[] { "^(0 ?)+", @"( |^)(0+\d+ ?)+", " 0$" })) return "sx"; //since this method offers me to input a string, for readability purposes, I won't just mash up all the regexes
-            else if (numberOfPresses > chainLimit) return string.Format("sendtochaterror Sorry! You exceeded the number of buttons you can press at a time, which in this case is {0} (you tried to press {1}). I would've striked you, but I feel lazy.\tThe end? Question mark???", chainLimit, numberOfPresses);
+            else if (numberOfPresses > behaviour.ChainLimit) return string.Format("sendtochaterror Sorry! You exceeded the number of buttons you can press at a time, which in this case is {0} (you tried to press {1} buttons). I would've striked you, but I feel lazy.\tThe end? Question mark???", behaviour.ChainLimit, numberOfPresses);
             else return presses;
         }
         return "sx";
@@ -284,39 +288,43 @@ public class QuadrupleSimpleton : MonoBehaviour
         if (chainReturnValue[0] != 's')
         {
             logMessage += "(valid)";
-            if (char.ToLowerInvariant(chainReturnValue[0]) == 'n')
+            ModuleLog(logMessage);
+            switch (char.ToLowerInvariant(chainReturnValue[0]))
             {
-                ModuleLog("You did the \"nothing\" command. u funni person eh");
-                yield return string.Format("sendtochat YES! YOU DID NOTHING! WOOHOO!! {0} (well, as if you were actually doing something to solve the module, huh)", GenerateSalt());
-            }
-            else
-            {
-                ModuleLog(logMessage);
-                if (char.ToLowerInvariant(chainReturnValue[0]) == 'm')
-                {
-                    if (side == 2)
+                case 'n':
+                    yield return "antitroll Easter egg disabled.";
+                    ModuleLog("You did the \"nothing\" command. u funni person eh");
+                    Audio.PlaySoundAtTransform("boing", M.transform);
+                    yield return string.Format("sendtochat YES! YOU DID NOTHING! WOOHOO!! {0} (well, as if you were actually doing something to solve the module, huh)", GenerateSalt());
+                    break;
+                case 'm':
+                    if (muted)
                     {
-                        yield return "sendtochaterror Oop. You are not in ruleseed! I will now proceed to ignore you.";
-                        yield return new WaitForSeconds(3f);
+                        ModuleLog("Already muted.");
+                        yield return "sendtochaterror Already muted.";
+                    }
+                    else if (IsRuleseed())
+                    {
+                        muted = true;
+                        ModuleLog("Module muted.");
+                        yield return "sendtochat Okay. Fine. TTwTT." + Environment.NewLine + "There's no turning back, eh?";
                     }
                     else
                     {
-                        yield return "sendtochat Okay. Fine. TTwTT."+Environment.NewLine+"There's no turn back, eh?.";
-                        muted = true;
+                        ModuleLog("Tried to mute in non-ruleseed mode.");
+                        yield return "sendtochaterror You need to be in ruleseed in order to mute the module.";
                     }
-                }
-                else
-                {
+                    break;
+                default:
                     int[] numbers = Array.ConvertAll(chainReturnValue.Split(), Convert.ToInt32);
                     for (int i = 0; i < numbers.Length; i++)
                     {
                         buttons[numbers[i] - 1].OnInteract();
                         if (i != numbers.Length - 1) yield return new WaitForSeconds(0.3f);
                     }
-                }
+                    yield return null;
+                    break;
             }
-
-            yield return null;
         }
         else
         {
@@ -337,8 +345,7 @@ public class QuadrupleSimpleton : MonoBehaviour
 #pragma warning restore 414
     {
         if (solved) yield break;
-        yield return null;
-        if (side == 2)
+        if (!IsRuleseed())
         {
             DoEasterEgg(true);
             yield return new WaitForSeconds(7f);
@@ -350,7 +357,7 @@ public class QuadrupleSimpleton : MonoBehaviour
             float[] afterInteractDelays = new float[] { 2f, 2.5f, 2.6f };
             bool[] mutes = new bool[] { false, false, true }; //specially these
             int[] sidesThresholds = new int[] { 5, 7 };
-            int i = 0;
+            int i;
 
             for (i = 0; i < 2; i++)
                 if (side < sidesThresholds[i]) break; //<<else if>> generalisation
