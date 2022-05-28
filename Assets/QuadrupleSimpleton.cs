@@ -292,7 +292,7 @@ public class QuadrupleSimpleton : MonoBehaviour
             switch (char.ToLowerInvariant(chainReturnValue[0]))
             {
                 case 'n':
-                    yield return "antitroll Easter egg disabled.";
+                    yield return "antitroll Refused to execute the easter egg: troll commands are disabled.";
                     ModuleLog("You did the \"nothing\" command. u funni person eh");
                     Audio.PlaySoundAtTransform("boing", M.transform);
                     yield return string.Format("sendtochat YES! YOU DID NOTHING! WOOHOO!! {0} (well, as if you were actually doing something to solve the module, huh)", GenerateSalt());

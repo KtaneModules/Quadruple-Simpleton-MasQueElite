@@ -24,7 +24,7 @@ public class NormalBehaviour : MonoBehaviour, IButtonBehaviour {
     private const string _helpMessage =
         " Use <<!{0} (press|p|button|b) n>> to press the nth button (spaces are optional)." +
         " You can chain presses up to 2 buttons." +
-        " Examples: !{0} press 14, !{0} 12, !{0} 1p3 b4button    2";
+        " Examples: !{0} press 4, !{0} 12, !{0} 1p3 b4button    2";
     public string HelpMessage { get { return _helpMessage; } }
 
     private Regex _commandRegex =
