@@ -179,8 +179,15 @@ public class QuadrupleSimpleton : MonoBehaviour
                 M.HandlePass();
                 ModuleLog("SOLVED!");
                 if (!IsRuleseed())
-                { if (random.Range(0, 50) == 0) DoEasterEgg(); }
-                else StartCoroutine(RandomSolved());
+                {
+                    if (random.Range(0, 50) == 0)
+                        DoEasterEgg();
+                }
+                else
+                {
+                    if (!muted) Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.CorrectChime, Module.transform);
+                    StartCoroutine(RandomSolved());
+                }
             }
         }
     }
@@ -192,7 +199,6 @@ public class QuadrupleSimpleton : MonoBehaviour
     }
     IEnumerator RandomSolved()
     {
-        if (!muted) Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.CorrectChime, Module.transform);
         for (int i = 0; i < 2; i++)
         {
             ColorButtons(Color.green);
