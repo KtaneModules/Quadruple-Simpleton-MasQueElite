@@ -56,7 +56,7 @@ public class RandomBehaviour : MonoBehaviour, IButtonBehaviour {
     //alternatively, I could put (p(ress) or b(utton)), which is the one that makes the most sense, but that would confuse people
 
     private Regex _commandRegex =
-        new Regex(@"^((press|p|button|b)?\s*(?<number>[1,9]{1,3})\s*)+$", //love those highlights
+        new Regex(@"^((press|p|button|b)?\s*(?<number>\d{1,3})\s*)+$", //love those highlights
         RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture); //flags: 101
     public Regex CommandRegex { get { return _commandRegex; } }
 
