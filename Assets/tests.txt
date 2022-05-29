@@ -169,6 +169,7 @@ Overflow and related:
 !1 101 - should press 2 buttons
 !1 10 - should be allowed
 
+!1 111111111111111111111111110 - should NOT be allowed
 !1 5724692734598237454922947538972 - should NOT be allowed
 !1 1213141516 - should NOT be allowed (5 buttons)
 !1 1 0 - should NOT be allowed
