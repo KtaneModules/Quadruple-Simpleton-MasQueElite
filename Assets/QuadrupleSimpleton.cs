@@ -90,21 +90,15 @@ public class QuadrupleSimpleton : MonoBehaviour
      *   7 8 9
      *   4 5 6
      *   1 2 3
-     * TODO: Make this O(1)
      */
     private int MirrorX(int input)
     {
-        int total = side * side;
-        for (int i = 0; i <= side - 2; i++)
-        {
-            if (input <= side * (side - (side - i) + 1) || input > total - side * (side - (side - i) + 1))
-            {
-                int offset = total - side * (2 * (side - (side - i)) + 1);
-                if (input > side * (side - (side - i) + 1)) return input - offset;
-                else return input + offset;
-            }
-        }
-        return -1;
+        int total = side * side; //total number of buttons
+        int rowNumber = (input - 1) / side; //the row position the input is in the grid; top to bottom from 0
+        int isRowAfterMiddle = Convert.ToInt32(rowNumber > side / 2 - 1); //true => 1; false => 0
+        int i = isRowAfterMiddle * (side - 1) + ((int)Math.Floor(Math.Tan(-isRowAfterMiddle)) + 1) * rowNumber; //isRowAfterMiddle ? i = side - rowNumber - 1 : rowNumber
+        int offset = total - side * (2 * (side - (side - i)) + 1); //i and offset are byproducts of the generalisation. Refer to testQSimp.txt
+        return input + ((int)Math.Floor(Math.Tan(-isRowAfterMiddle)) + 1) * offset; //isRowAfterMiddle ? input - offset : input + offset
     }
 
     private void MakeButtons()
@@ -262,7 +256,7 @@ public class QuadrupleSimpleton : MonoBehaviour
     private string ParseChainCommand(string input)
     {
         if (new string[] {"nothing", "n", "mute", "m"}.Contains(input)) return input;
-        Match commands = behaviour.CommandRegex.Match(input); //love those highlights
+        Match commands = behaviour.CommandRegex.Match(input.Trim());
             
         if (commands.Success)
         {
@@ -290,7 +284,7 @@ public class QuadrupleSimpleton : MonoBehaviour
 #pragma warning restore 414
     {
         string logMessage = string.Format("You did the command: <<{0}>>. ", input);
-        string chainReturnValue = ParseChainCommand(input).Trim();
+        string chainReturnValue = ParseChainCommand(input);
         if (chainReturnValue[0] != 's')
         {
             logMessage += "(valid)";

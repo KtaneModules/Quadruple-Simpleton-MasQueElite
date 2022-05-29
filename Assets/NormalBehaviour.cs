@@ -28,8 +28,8 @@ public class NormalBehaviour : MonoBehaviour, IButtonBehaviour {
     public string HelpMessage { get { return _helpMessage; } }
 
     private Regex _commandRegex =
-        new Regex(@"^((press|p|button|b)?(\s+)?(?<number>[1-4]{1,3})(\s+)?)+$",
-        RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.IgnorePatternWhitespace);
+        new Regex(@"^((press|p|button|b)?\s*(?<number>[1-4]{1,3})\s*)+$",
+        RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture);
     public Regex CommandRegex { get { return _commandRegex; } }
 
     private const int _chainLimit = 2;
